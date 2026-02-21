@@ -49,8 +49,23 @@ export const api = {
       body: JSON.stringify({ fullName, email, password, confirmPassword }),
     }),
 
-  me: () =>
+  me: () => request<{ fullName: string; email: string }>("/api/me", { method: "GET" }),
+
+    updateMe: (fullName: string) =>
     request<{ fullName: string; email: string }>("/api/me", {
-        method: "GET",
+        method: "PUT",
+        body: JSON.stringify({ fullName }),
+    }),
+
+    forgotPassword: (email: string) =>
+    request<{ message: string }>("/api/auth/forgot-password", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+    }),
+
+    resetPassword: (token: string, newPassword: string, confirmPassword: string) =>
+    request<{ message: string }>("/api/auth/reset-password", {
+        method: "POST",
+        body: JSON.stringify({ token, newPassword, confirmPassword }),
     }),
 };
