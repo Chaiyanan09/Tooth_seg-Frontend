@@ -28,8 +28,9 @@ export default function Navbar() {
 
   return (
     <div
-      style={{
+    style={{
         width: "100%",
+        boxSizing: "border-box",   // ✅ สำคัญมาก
         height: 56,
         display: "flex",
         alignItems: "center",
@@ -41,7 +42,7 @@ export default function Navbar() {
         position: "sticky",
         top: 0,
         zIndex: 10,
-      }}
+    }}
     >
       <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
         <Link href="/home" style={{ fontWeight: 800, textDecoration: "none", color: "black" }}>

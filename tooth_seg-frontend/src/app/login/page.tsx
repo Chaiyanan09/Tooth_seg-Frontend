@@ -110,6 +110,14 @@ export default function LoginPage() {
               </button>
 
               <button
+                type="button"
+                className={styles.secondary}
+                onClick={() => router.push("/forgot-password")}
+              >
+                Forgot password?
+              </button>
+              
+              <button
                 className={styles.secondary}
                 type="button"
                 onClick={() => router.push("/register")}

@@ -1,0 +1,152 @@
+.page {
+  position: fixed;   /* ✅ ล็อกหน้าไว้ */
+  inset: 0;
+  overflow: hidden;  /* ✅ กันเลื่อน */
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #fff6f6 0%, #f3fff6 100%);
+}
+
+.decor1, .decor2, .decor3 {
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+.decor1 {
+  width: 520px;
+  height: 520px;
+  right: -220px;
+  top: -220px;
+  background: radial-gradient(circle at 30% 30%, rgba(229,57,53,0.70), rgba(229,57,53,0));
+}
+
+.decor2 {
+  width: 560px;
+  height: 560px;
+  left: -260px;
+  bottom: -260px;
+  background: radial-gradient(circle at 30% 30%, rgba(46,125,50,0.65), rgba(46,125,50,0));
+}
+
+.decor3 {
+  width: 260px;
+  height: 260px;
+  left: 42%;
+  top: 10%;
+  opacity: 0.35;
+  background: radial-gradient(circle at 40% 40%, rgba(255,255,255,0.85), rgba(255,255,255,0));
+}
+
+.card {
+  width: min(560px, 100%);
+  background: rgba(255,255,255,0.86);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 22px;
+  padding: 28px 26px;
+  box-shadow: 0 20px 56px rgba(0,0,0,0.12);
+  backdrop-filter: blur(10px);
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: 28px;
+  letter-spacing: -0.4px;
+}
+
+.sub {
+  margin: 0 0 18px;
+  color: rgba(0,0,0,0.58);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+}
+
+.label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: rgba(0,0,0,0.75);
+}
+
+.input {
+  padding: 12px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.14);
+  outline: none;
+  background: rgba(255,255,255,0.92);
+}
+
+.input:focus {
+  border-color: rgba(46,125,50,0.35);
+  box-shadow: 0 0 0 4px rgba(46,125,50,0.10);
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.primary {
+  flex: 1;
+  min-width: 180px;
+  padding: 12px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(229,57,53,0.55);
+  background: rgba(229,57,53,0.92);
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.secondary {
+  flex: 1;
+  min-width: 180px;
+  padding: 12px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: #fff;
+  color: rgba(0,0,0,0.82);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.msg {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(46,125,50,0.08);
+  border: 1px solid rgba(46,125,50,0.18);
+  color: rgba(0,0,0,0.85);
+  font-size: 13px;
+}
+
+.err {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(229,57,53,0.10);
+  border: 1px solid rgba(229,57,53,0.20);
+  color: rgba(120,0,0,0.92);
+  font-size: 13px;
+}
+
+.hint {
+  margin-top: 14px;
+  color: rgba(0,0,0,0.50);
+  font-size: 12px;
+}
