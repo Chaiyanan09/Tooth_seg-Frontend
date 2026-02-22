@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { auth } from "@/lib/auth";
 import styles from "./login.module.css";
 import StudentIDCard from "./StudentIDCard";
+import AuthFlipCard from "../register/AuthFlipCard";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,19 +16,37 @@ export default function LoginPage() {
   const [err, setErr] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setErr(null);
-    setLoading(true);
-    try {
-      const r = await api.login(email.trim(), password);
-      auth.set(r.accessToken);
-      router.push("/home");
-    } catch (ex: any) {
-      setErr(ex.message || "Login failed");
-    } finally {
-      setLoading(false);
-    }
+  e.preventDefault();
+
+  const e1 = email.trim();
+  const p1 = password;
+
+  // ✅ กรอกไม่ครบ -> toast ทันที (แทนที่ toast เดิม)
+  if (!e1 && !p1) {
+    setErr("Please fill in your email and password.");
+    return;
   }
+  if (!e1) {
+    setErr("Please enter your email.");
+    return;
+  }
+  if (!p1) {
+    setErr("Please enter your password.");
+    return;
+  }
+
+  setErr(null);
+  setLoading(true);
+  try {
+    const r = await api.login(e1, p1);
+    auth.set(r.accessToken);
+    router.push("/home");
+  } catch (ex: any) {
+    setErr(ex.message || "Login failed: Invalid email or password.");
+  } finally {
+    setLoading(false);
+  }
+}
 
   return (
     <div className={styles.page}>
@@ -94,24 +113,26 @@ export default function LoginPage() {
         {/* RIGHT: Student ID card */}
         <section className={styles.right}>
           <div className={styles.rightStack}>
-            {/* ✅ Header ด้านบนการ์ด */}
-            <img
-              src="/assets/VLU_logo_text.png"
-              className={styles.rightTopLogo}
-            />
+            <img src="/assets/VLU_logo_text.png" alt="..." className={styles.rightTopLogo} />
 
-            {/* Card เดิม */}
-            <StudentIDCard
-              email={email}
-              password={password}
-              loading={loading}
-              err={err}
-              apiBase={process.env.NEXT_PUBLIC_API_BASE}
-              onEmailChange={setEmail}
-              onPasswordChange={setPassword}
-              onSubmit={onSubmit}
-              onForgot={() => router.push("/forgot-password")}
-              onRegister={() => router.push("/register")}
+            <AuthFlipCard
+              flipped={false}
+              autoFlip={false}
+              front={
+                <StudentIDCard
+                  email={email}
+                  password={password}
+                  loading={loading}
+                  err={err}
+                  apiBase={process.env.NEXT_PUBLIC_API_BASE}
+                  onEmailChange={setEmail}
+                  onPasswordChange={setPassword}
+                  onSubmit={onSubmit}
+                  onForgot={() => router.push("/forgot-password")}
+                  onRegister={() => router.push("/register")}
+                />
+              }
+              back={<div />} // ไม่ใช้
             />
           </div>
         </section>
