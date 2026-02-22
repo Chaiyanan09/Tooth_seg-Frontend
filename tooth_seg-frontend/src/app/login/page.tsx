@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { auth } from "@/lib/auth";
 import styles from "./login.module.css";
+import StudentIDCard from "./StudentIDCard";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,6 +33,13 @@ export default function LoginPage() {
     <div className={styles.page}>
       <div className={styles.shell}>
         <section className={styles.left}>
+          {/* ✅ TOP-LEFT DENTISTRY LOGO (layer above bg) */}
+          <img
+            src="/assets/Collab2.png"
+            className={styles.leftTopLogo}
+          />
+
+          {/* keep your existing decor circles */}
           <div className={styles.decor1} />
           <div className={styles.decor2} />
           <div className={styles.decor3} />
@@ -41,27 +49,36 @@ export default function LoginPage() {
               <div className={styles.kicker}>Clinical AI • Web App</div>
               <h1 className={styles.leftTitle}>Tooth Segmentation</h1>
               <p className={styles.leftDesc}>
-                Upload a panoramic X-ray to run instance segmentation + FDI numbering.
-                Review overlays and a structured table (FDI, confidence, area, position), then export PNG + JSON for reporting.
+                Upload a panoramic X-ray to run instance segmentation + FDI
+                numbering. Review overlays and a structured table (FDI,
+                confidence, area, position), then export PNG + JSON for reporting.
               </p>
             </div>
 
             <div className={styles.featureGrid}>
               <div className={styles.feature}>
                 <p className={styles.featureTitle}>Clear overlays</p>
-                <p className={styles.featureText}>Masks + contours with readable FDI labels.</p>
+                <p className={styles.featureText}>
+                  Masks + contours with readable FDI labels.
+                </p>
               </div>
               <div className={styles.feature}>
                 <p className={styles.featureTitle}>Structured output</p>
-                <p className={styles.featureText}>FDI, score, area, and centroid for each tooth instance.</p>
+                <p className={styles.featureText}>
+                  FDI, score, area, and centroid for each tooth instance.
+                </p>
               </div>
               <div className={styles.feature}>
                 <p className={styles.featureTitle}>Export-ready</p>
-                <p className={styles.featureText}>Download PNG overlay and JSON for audit or reports.</p>
+                <p className={styles.featureText}>
+                  Download PNG overlay and JSON for audit or reports.
+                </p>
               </div>
               <div className={styles.feature}>
                 <p className={styles.featureTitle}>History per user</p>
-                <p className={styles.featureText}>Keep cases organized under your account.</p>
+                <p className={styles.featureText}>
+                  Keep cases organized under your account.
+                </p>
               </div>
             </div>
 
@@ -74,67 +91,28 @@ export default function LoginPage() {
           </div>
         </section>
 
+        {/* RIGHT: Student ID card */}
         <section className={styles.right}>
-          <div className={styles.card}>
-            <h2 className={styles.formTitle}>Login</h2>
-            <p className={styles.formSub}>Sign in to access predictions and your history.</p>
+          <div className={styles.rightStack}>
+            {/* ✅ Header ด้านบนการ์ด */}
+            <img
+              src="/assets/VLU_logo_text.png"
+              className={styles.rightTopLogo}
+            />
 
-            <form className={styles.form} onSubmit={onSubmit}>
-              <label className={styles.label}>
-                Email
-                <input
-                  className={styles.input}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  placeholder="you@example.com"
-                  required
-                />
-              </label>
-
-              <label className={styles.label}>
-                Password
-                <input
-                  className={styles.input}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="current-password"
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                />
-              </label>
-
-              <button className={styles.primary} type="submit" disabled={loading}>
-                {loading ? "Please wait..." : "Login"}
-              </button>
-
-              <button
-                type="button"
-                className={styles.secondary}
-                onClick={() => router.push("/forgot-password")}
-              >
-                Forgot password?
-              </button>
-              
-              <button
-                className={styles.secondary}
-                type="button"
-                onClick={() => router.push("/register")}
-              >
-                Create an account
-              </button>
-
-              {err && (
-                <div className={styles.err}>
-                  <b>Error:</b> {err}
-                </div>
-              )}
-            </form>
-
-            <div className={styles.hint}>
-              Backend API: <code>{process.env.NEXT_PUBLIC_API_BASE}</code>
-            </div>
+            {/* Card เดิม */}
+            <StudentIDCard
+              email={email}
+              password={password}
+              loading={loading}
+              err={err}
+              apiBase={process.env.NEXT_PUBLIC_API_BASE}
+              onEmailChange={setEmail}
+              onPasswordChange={setPassword}
+              onSubmit={onSubmit}
+              onForgot={() => router.push("/forgot-password")}
+              onRegister={() => router.push("/register")}
+            />
           </div>
         </section>
       </div>

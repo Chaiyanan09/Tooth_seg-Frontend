@@ -1,38 +1,113 @@
+/* =========================================================
+   Login Page Layout (Readable / Structured)
+   ========================================================= */
+
+/* =========================================================
+   1) Page / Shell
+   ========================================================= */
+
 .page {
+  --c-red: 229, 57, 53;
+  --c-green: 46, 125, 50;
+
+  --bg-page: linear-gradient(135deg, #fff6f6 0%, #f3fff6 100%);
+  --bg-left: linear-gradient(
+    135deg,
+    rgba(var(--c-red), 0.18) 0%,
+    rgba(var(--c-green), 0.14) 100%
+  );
+  --bg-right: rgba(255, 255, 255, 0.82);
+
+  --glass-1: rgba(255, 255, 255, 0.55);
+  --glass-2: rgba(255, 255, 255, 0.60);
+  --glass-3: rgba(255, 255, 255, 0.65);
+  --glass-card: rgba(255, 255, 255, 0.86);
+
+  --b-soft: 1px solid rgba(0, 0, 0, 0.08);
+  --b-input: 1px solid rgba(0, 0, 0, 0.14);
+  --shadow-card: 0 20px 56px rgba(0, 0, 0, 0.12);
+
+  --r-pill: 999px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-card: 22px;
+
+  --blur: blur(10px);
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: linear-gradient(135deg, #fff6f6 0%, #f3fff6 100%);
+  background: var(--bg-page);
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
 
 .shell {
   height: 100%;
   width: 100%;
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
+  grid-template-columns: 1.45fr 0.55fr;
 }
 
-/* LEFT */
+/* =========================================================
+   2) LEFT Column
+   - เปลี่ยนพื้นหลังเป็นรูป bg จางๆ + gradient overlay
+   - เก็บวงกลม decor เดิมไว้เหมือนเดิม
+   - เก็บข้อความเดิมไว้เหมือนเดิม
+   ========================================================= */
+
 .left {
   height: 100%;
   padding: clamp(34px, 5vw, 92px);
-  display: flex;
-  align-items: center;
   position: relative;
   overflow: hidden;
 
-  background: linear-gradient(
-    135deg,
-    rgba(229, 57, 53, 0.18) 0%,
-    rgba(46, 125, 50, 0.14) 100%
-  );
+  display: flex;
+  align-items: center;
+
+  /* ✅ ให้พื้นหลังมาจาก pseudo-elements */
+  background: transparent;
+}
+
+/* ✅ BG photo (จางๆ) */
+.left::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  /* เปลี่ยนชื่อไฟล์ให้ตรงกับของคุณใน public/assets/ */
+  background: url("/assets/VLU_bg.png") center / cover no-repeat;
+  opacity: 0.18; /* ปรับความจางของรูป */
+  filter: saturate(0.95) contrast(1.05);
+
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ✅ Overlay gradient (รักษา mood เดิม + อ่าน text ชัด) */
+.left::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: var(--bg-left);
+  pointer-events: none;
+  z-index: 1;
 }
 
 .leftInner {
   width: min(760px, 100%);
   display: grid;
   gap: 22px;
+
+  /* ✅ ให้ข้อความอยู่เหนือ bg + decor */
+  position: relative;
+  z-index: 3;
+  transform: scale(1.2);
+  transform-origin: left center;
 }
+
+/* ----- Branding / Text ----- */
 
 .brand {
   display: grid;
@@ -44,19 +119,21 @@
   align-items: center;
   gap: 8px;
   width: fit-content;
+
+  padding: 8px 12px;
+  border-radius: var(--r-pill);
+  background: var(--glass-2);
+  border: var(--b-soft);
+  backdrop-filter: var(--blur);
+
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(0, 0, 0, 0.62);
-  padding: 8px 12px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.60);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  backdrop-filter: blur(10px);
 }
 
-.leftTitle{
+.leftTitle {
   margin: 0;
   font-family: var(--font-serif);
   font-weight: 800;
@@ -66,67 +143,82 @@
   text-wrap: balance;
 }
 
-.leftDesc{
+.leftDesc {
   margin: 0;
   max-width: 60ch;
+
   font-size: 15.5px;
   line-height: 1.75;
-  color: rgba(0,0,0,0.62);
+  color: rgba(0, 0, 0, 0.62);
   text-wrap: pretty;
 }
 
+/* ----- Features ----- */
+
 .featureGrid {
+  margin-top: 4px;
+
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  margin-top: 4px;
 }
 
 .feature {
-  border-radius: 16px;
   padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  backdrop-filter: blur(10px);
+  border-radius: var(--r-lg);
+  background: var(--glass-1);
+  border: var(--b-soft);
+  backdrop-filter: var(--blur);
 }
 
 .featureTitle {
+  margin: 0 0 4px;
   font-weight: 800;
   font-size: 13px;
-  margin: 0 0 4px;
 }
 
 .featureText {
   margin: 0;
   font-size: 12.5px;
-  color: rgba(0, 0, 0, 0.58);
   line-height: 1.45;
+  color: rgba(0, 0, 0, 0.58);
 }
 
+/* ----- Badges ----- */
+
 .badges {
+  margin-top: 4px;
+
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 4px;
 }
 
 .badge {
-  font-size: 13px;
   padding: 8px 12px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.65);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--r-pill);
+  background: var(--glass-3);
+  border: var(--b-soft);
   backdrop-filter: blur(8px);
+
+  font-size: 13px;
 }
 
-/* LEFT DECOR */
+/* =========================================================
+   3) LEFT Decorative Blobs
+   - คงเดิม แต่เพิ่ม z-index ให้ทับ bg ได้
+   ========================================================= */
+
 .decor1,
 .decor2,
 .decor3 {
   position: absolute;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   pointer-events: none;
   opacity: 0.55;
+
+  /* ✅ อยู่เหนือ bg (::before/::after) */
+  z-index: 2;
 }
 
 .decor1 {
@@ -134,7 +226,11 @@
   height: 560px;
   right: -220px;
   top: -240px;
-  background: radial-gradient(circle at 30% 30%, rgba(229, 57, 53, 0.75), rgba(229, 57, 53, 0));
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(var(--c-red), 0.75),
+    rgba(var(--c-red), 0)
+  );
 }
 
 .decor2 {
@@ -142,7 +238,11 @@
   height: 620px;
   left: -290px;
   bottom: -310px;
-  background: radial-gradient(circle at 30% 30%, rgba(46, 125, 50, 0.70), rgba(46, 125, 50, 0));
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(var(--c-green), 0.70),
+    rgba(var(--c-green), 0)
+  );
 }
 
 .decor3 {
@@ -151,28 +251,55 @@
   left: 40%;
   top: 16%;
   opacity: 0.35;
-  background: radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0));
+  background: radial-gradient(
+    circle at 40% 40%,
+    rgba(255, 255, 255, 0.8),
+    rgba(255, 255, 255, 0)
+  );
 }
 
-/* RIGHT */
+/* ✅ โลโก้มุมซ้ายบน (ใช้ใน page.tsx: className={styles.leftTopLogo}) */
+.leftTopLogo {
+  position: absolute;
+  top: 22px;
+  left: 22px;
+  height: clamp(30px, 4vw, 45px);
+  width: auto;
+  object-fit: contain;
+  z-index: 4;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.18));
+}
+
+/* =========================================================
+   4) RIGHT Column (container)
+   ========================================================= */
+
 .right {
   height: 100%;
-  padding: clamp(22px, 3.6vw, 72px);
+  padding: clamp(22px, 3.6vw, 56px);
+
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.82);
+
+  background: var(--bg-right);
 }
+
+/* =========================================================
+   5) Legacy card styles (ไม่ใช้แล้วก็ปล่อยไว้ได้)
+   ========================================================= */
 
 .card {
   width: 100%;
-  max-width: 620px;              /* ทำให้ “เต็มๆ” ใน column */
-  border-radius: 22px;
+  max-width: 620px;
   padding: 30px 28px;
-  background: rgba(255, 255, 255, 0.86);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 20px 56px rgba(0, 0, 0, 0.12);
-  backdrop-filter: blur(10px);
+
+  border-radius: var(--r-card);
+  background: var(--glass-card);
+  border: var(--b-soft);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: var(--blur);
 }
 
 .formTitle {
@@ -183,9 +310,9 @@
 
 .formSub {
   margin: 0 0 18px;
-  color: rgba(0, 0, 0, 0.58);
   font-size: 13px;
   line-height: 1.5;
+  color: rgba(0, 0, 0, 0.58);
 }
 
 .form {
@@ -196,30 +323,34 @@
 .label {
   display: grid;
   gap: 6px;
+
   font-size: 13px;
   color: rgba(0, 0, 0, 0.75);
 }
 
 .input {
-  padding: 12px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.14);
+  padding: 12px;
+  border-radius: var(--r-md);
+  border: var(--b-input);
   outline: none;
+
   background: rgba(255, 255, 255, 0.92);
 }
 
 .input:focus {
-  border-color: rgba(46, 125, 50, 0.35);
-  box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.10);
+  border-color: rgba(var(--c-green), 0.35);
+  box-shadow: 0 0 0 4px rgba(var(--c-green), 0.10);
 }
 
 .primary {
   margin-top: 6px;
-  padding: 12px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(229, 57, 53, 0.55);
-  background: rgba(229, 57, 53, 0.92);
+  padding: 12px;
+  border-radius: var(--r-md);
+
+  border: 1px solid rgba(var(--c-red), 0.55);
+  background: rgba(var(--c-red), 0.92);
   color: #fff;
+
   font-weight: 900;
   cursor: pointer;
 }
@@ -230,11 +361,13 @@
 }
 
 .secondary {
-  padding: 12px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(46, 125, 50, 0.45);
-  background: rgba(46, 125, 50, 0.08);
+  padding: 12px;
+  border-radius: var(--r-md);
+
+  border: 1px solid rgba(var(--c-green), 0.45);
+  background: rgba(var(--c-green), 0.08);
   color: rgba(0, 0, 0, 0.82);
+
   font-weight: 900;
   cursor: pointer;
 }
@@ -242,10 +375,12 @@
 .err {
   margin-top: 10px;
   padding: 10px 12px;
-  border-radius: 12px;
-  background: rgba(229, 57, 53, 0.10);
-  border: 1px solid rgba(229, 57, 53, 0.25);
+  border-radius: var(--r-md);
+
+  background: rgba(var(--c-red), 0.10);
+  border: 1px solid rgba(var(--c-red), 0.25);
   color: rgba(120, 0, 0, 0.92);
+
   font-size: 13px;
 }
 
@@ -255,26 +390,347 @@
   color: rgba(0, 0, 0, 0.55);
 }
 
-/* MOBILE */
+/* =========================================================
+   6) Student ID Card (Figma-like)
+   ========================================================= */
+
+.idCard {
+  position: relative;
+  width: min(420px, 100%);
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+
+  /* ปรับความกว้างแถบเขียวตรงนี้ */
+  --tealW: 72px;
+}
+
+/* แถบเขียว: ขวาสุด เต็มความสูง */
+.idTeal {
+  position: absolute;
+  top: 0;
+  right: 0;                 /* ✅ ชิดขวาสุด */
+  height: 100%;
+  width: var(--tealW);
+  background: #0aa7a0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* บาร์โค้ด: กล่องขาว "ลอยบนแถบเขียว" และขยับลงกลาง */
+.idBarcodeStrip {
+  position: absolute;
+  right: 0px;              /* ✅ ชิดขวา แต่เว้นขอบนิด */
+  top: 50%;                 /* ✅ กึ่งกลางแนวตั้ง */
+  transform: translateY(-50%);
+
+  width: 44px;
+  height: 75%;              /* ✅ สูงประมาณ 60% ของการ์ด */
+  padding: 8px 6px;
+
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 0px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+
+  z-index: 4;               /* ✅ อยู่บนสุด */
+  pointer-events: none;
+}
+
+/* ลายบาร์โค้ด (แบบแท่งตั้ง เหมือนใน Figma) */
+.idBarcode {
+  right: 0px;
+  height: 100%;
+  width: 100%;
+  border-radius: 0px;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.95) 0px,
+    rgba(0, 0, 0, 0.95) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+}
+
+/* พื้นแดง: ต้องอยู่ใต้ teal/barcode และกันพื้นที่ด้านขวา */
+.idBody {
+  position: relative;
+  z-index: 1;               /* ✅ อยู่ใต้ strip */
+  background: #d61f2c;
+  color: #fff;
+
+  padding: 26px 26px 24px;
+  padding-right: calc(var(--tealW) + 22px); /* ✅ กันพื้นที่แถบเขียว */
+  min-height: 520px;
+}
+
+.idUniLogo{
+  display: block;
+  height: 42px;     /* ปรับได้ */
+  width: auto;
+  object-fit: contain;
+}
+
+/* header */
+.idHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.idLogoDot {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.idHeaderText {
+  line-height: 1.05;
+}
+
+.idHeaderTop {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  opacity: 0.9;
+}
+
+.idHeaderMain {
+  margin-top: 2px;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+/* photo block */
+.idPhotoBlock{
+  margin-top: 18px;
+
+  /* เอากรอบออก */
+  width: auto;
+  height: auto;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+
+  display: block;        /* ไม่ต้อง center แบบเดิม */
+}
+
+/* กล่องครอบ: ไม่ต้องมีพื้นหลัง/ไม่ต้องโค้ง */
+.idPhotoInner{
+  width: 120px;
+  height: 120px;
+  background: transparent;  /* ✅ เอาพื้นเขียวออก */
+  border-radius: 0;         /* ✅ เอามุมโค้งของกรอบออก */
+  border: 0;
+  box-shadow: none;
+
+  display: grid;
+  place-items: center;
+}
+
+/* รูป: ให้รูปเป็นทรงเอง */
+.idAvatarImg{
+  width: 120px;
+  height: 120px;
+  display: block;
+  object-fit: contain;
+  background: transparent;
+
+  /* ถ้ารูปมีขอบโปร่งใสเยอะแล้วดูเล็ก ให้ขยายด้วย */
+  transform: scale(1.1);
+}
+
+.idAvatarHead {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: #fff;
+  position: absolute;
+  top: 14px;
+}
+
+.idAvatarBody {
+  width: 70px;
+  height: 30px;
+  border-radius: 999px;
+  background: #fff;
+  position: absolute;
+  bottom: 14px;
+}
+
+/* form */
+.idForm {
+  margin-top: 18px;
+  display: grid;
+  gap: 10px;
+}
+
+.idInput {
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.45);
+  outline: none;
+  background: rgba(255, 255, 255, 0.95);
+  color: #111;
+  font-size: 14px;
+}
+
+.idInput:focus {
+  border-color: rgba(0, 0, 0, 0.65);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.18);
+}
+
+.idLoginBtn {
+  width: 100%;
+  height: 44px;
+  border-radius: 12px;
+  border: 0;
+  background: #ffffff;
+  color: #111;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.idLoginBtn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.idForgot {
+  width: fit-content;
+  background: transparent;
+  border: 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.idDivider {
+  margin-top: 6px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.30);
+}
+
+/* socials + register */
+.idRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.idSocial {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 0;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.idG {
+  color: #111;
+  font-weight: 900;
+  font-size: 16px;
+}
+
+.idRegister {
+  margin-left: auto;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 0;
+  background: #fff;
+  color: #111;
+  font-weight: 900;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.idErr {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 13px;
+}
+
+.idHint {
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.idHint code {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* =========================================================
+   7) Responsive (Mobile)
+   ========================================================= */
+
 @media (max-width: 980px) {
   .page {
     position: relative;
     min-height: 100dvh;
     overflow: auto;
   }
+
   .shell {
     grid-template-columns: 1fr;
   }
+
   .left {
     padding: 40px 26px;
   }
+
   .featureGrid {
     grid-template-columns: 1fr;
   }
+
   .right {
     padding: 28px 18px 40px;
   }
+
   .card {
     max-width: 560px;
   }
+
+  .idCard {
+    width: min(560px, 100%);
+  }
+
+  .leftTopLogo{
+    top: 16px;
+    left: 16px;
+  }
+}
+
+/* ===== Right: add top header logo above card ===== */
+
+.rightStack{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;  /* ให้โลโก้กับการ์ดอยู่กึ่งกลางแนวตั้งเดียวกัน */
+  gap: 26px;
+}
+
+.rightTopLogo{
+  height: 64px;         /* ปรับได้ */
+  width: auto;
+  object-fit: contain;
+  opacity: 0.95;
+  margin-top: -6px;
 }
