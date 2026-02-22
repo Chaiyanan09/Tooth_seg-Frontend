@@ -1,39 +1,73 @@
 import { auth } from "./auth";
 
-const base = process.env.NEXT_PUBLIC_API_BASE!;
+function normalizeBase(raw?: string) {
+  if (!raw) {
+    throw new Error(
+      "NEXT_PUBLIC_API_BASE is not set. Set it in Vercel/your .env.local, e.g. https://<backend>.up.railway.app"
+    );
+  }
+
+  let b = raw.trim().replace(/\/+$/, ""); // remove trailing slashes
+
+  // If missing protocol, add one (local -> http, others -> https)
+  if (!/^https?:\/\//i.test(b)) {
+    const isLocal = /^localhost(:\d+)?$/i.test(b) || /^127\.0\.0\.1(:\d+)?$/i.test(b);
+    b = (isLocal ? "http://" : "https://") + b;
+  }
+
+  return b;
+}
+
+const base = normalizeBase(process.env.NEXT_PUBLIC_API_BASE);
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = auth.get();
   const headers = new Headers(init.headers);
 
-  if (!(init.body instanceof FormData)) headers.set("Content-Type", "application/json");
-  if (token) headers.set("Authorization", `Bearer ${token}`);
+  // Set content-type only when we actually send JSON
+  const hasBody = init.body !== undefined && init.body !== null;
+  const isForm = init.body instanceof FormData;
+
+  if (hasBody && !isForm && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
 
   const res = await fetch(`${base}${path}`, { ...init, headers });
 
+  // ✅ read body ONCE
+  const raw = await res.text();
+
+  // error
   if (!res.ok) {
     let msg = `HTTP ${res.status}`;
+
+    // try JSON error
     try {
-      const data = await res.json();
+      const data = raw ? JSON.parse(raw) : null;
       msg = data?.message || data?.error || msg;
     } catch {
-      const text = await res.text();
-      if (text) msg = text;
+      // fallback text
+      if (raw) msg = raw;
     }
+
     throw new Error(msg);
   }
 
-  // ✅ handle empty response body (register usually returns 200/204 with no JSON)
-  if (res.status === 204) return undefined as T;
-
-  const text = await res.text();
-  if (!text) return undefined as T;
+  // ok but empty body (common for 200/204)
+  if (!raw || res.status === 204 || res.status === 205) return undefined as T;
 
   const ct = res.headers.get("content-type") || "";
-  if (ct.includes("application/json")) return JSON.parse(text) as T;
+  const looksJson = raw.trim().startsWith("{") || raw.trim().startsWith("[");
 
-  // fallback (rare)
-  return text as unknown as T;
+  if (ct.includes("application/json") || looksJson) {
+    return JSON.parse(raw) as T;
+  }
+
+  return raw as unknown as T;
 }
 
 export const api = {
@@ -51,21 +85,21 @@ export const api = {
 
   me: () => request<{ fullName: string; email: string }>("/api/me", { method: "GET" }),
 
-    updateMe: (fullName: string) =>
+  updateMe: (fullName: string) =>
     request<{ fullName: string; email: string }>("/api/me", {
-        method: "PUT",
-        body: JSON.stringify({ fullName }),
+      method: "PUT",
+      body: JSON.stringify({ fullName }),
     }),
 
-    forgotPassword: (email: string) =>
+  forgotPassword: (email: string) =>
     request<{ message: string }>("/api/auth/forgot-password", {
-        method: "POST",
-        body: JSON.stringify({ email }),
+      method: "POST",
+      body: JSON.stringify({ email }),
     }),
 
-    resetPassword: (token: string, newPassword: string, confirmPassword: string) =>
+  resetPassword: (token: string, newPassword: string, confirmPassword: string) =>
     request<{ message: string }>("/api/auth/reset-password", {
-        method: "POST",
-        body: JSON.stringify({ token, newPassword, confirmPassword }),
+      method: "POST",
+      body: JSON.stringify({ token, newPassword, confirmPassword }),
     }),
 };
