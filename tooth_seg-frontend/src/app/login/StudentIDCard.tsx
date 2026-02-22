@@ -41,6 +41,11 @@ export default function StudentIDCard(props: Props) {
 
       {/* Red body */}
       <div className={styles.idBody}>
+        {err && (
+          <div className={styles.idToastErr} role="alert" aria-live="polite">
+            <b>Login failed:</b> {err}
+          </div>
+        )}
         {/* Header: use logo image */}
         <div className={styles.idHeader}>
           <img
@@ -68,7 +73,6 @@ export default function StudentIDCard(props: Props) {
             onChange={(e) => onEmailChange(e.target.value)}
             autoComplete="email"
             placeholder="User name or Email"
-            required
           />
 
           <input
@@ -78,7 +82,6 @@ export default function StudentIDCard(props: Props) {
             autoComplete="current-password"
             placeholder="Password"
             type="password"
-            required
           />
 
           <button className={styles.idLoginBtn} type="submit" disabled={loading}>
@@ -92,24 +95,10 @@ export default function StudentIDCard(props: Props) {
           <div className={styles.idDivider} />
 
           <div className={styles.idRow}>
-            <button className={styles.idSocial} type="button" aria-label="Google login">
-              <span className={styles.idG}>G</span>
-            </button>
-            <button className={styles.idSocial} type="button" aria-label="Social login 2" />
-            <button className={styles.idSocial} type="button" aria-label="Social login 3" />
-
             <button className={styles.idRegister} type="button" onClick={onRegister}>
               Register
             </button>
           </div>
-
-          {err && <div className={styles.idErr}>Error: {err}</div>}
-
-          {apiBase ? (
-            <div className={styles.idHint}>
-              Backend API: <code>{apiBase}</code>
-            </div>
-          ) : null}
         </form>
       </div>
     </div>

@@ -40,6 +40,19 @@
   user-select: none;
   -webkit-user-select: none;
   -ms-user-select: none;
+
+  --cardW: 420px;
+  --cardR: 28px;
+  --cardH: 520px;
+  --cardShadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+
+  --ease: cubic-bezier(.2,.8,.2,1);
+  --t-fast: 160ms;
+  --t-med: 220ms;
+}
+
+.page *, .page *::before, .page *::after{
+  box-sizing: border-box;
 }
 
 .shell {
@@ -284,6 +297,8 @@
   justify-content: center;
 
   background: var(--bg-right);
+  border-left: 1px solid rgba(0,0,0,0.06);
+  box-shadow: -18px 0 40px rgba(0,0,0,0.06);
 }
 
 /* =========================================================
@@ -394,15 +409,14 @@
    6) Student ID Card (Figma-like)
    ========================================================= */
 
-.idCard {
+.idCard{
   position: relative;
-  width: min(420px, 100%);
-  border-radius: 28px;
+  width: 100%;
+  max-width: var(--cardW);
+  border-radius: var(--cardR);
   overflow: hidden;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
-
-  /* ปรับความกว้างแถบเขียวตรงนี้ */
-  --tealW: 72px;
+  box-shadow: var(--cardShadow);
+  --tealW: 55px;
 }
 
 /* แถบเขียว: ขวาสุด เต็มความสูง */
@@ -586,7 +600,7 @@
 .idLoginBtn {
   width: 100%;
   height: 44px;
-  border-radius: 12px;
+  border-radius: 999px;
   border: 0;
   background: #ffffff;
   color: #111;
@@ -605,7 +619,7 @@
   border: 0;
   color: rgba(255, 255, 255, 0.92);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 4px;
   cursor: pointer;
@@ -622,31 +636,12 @@
 .idRow {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 4px;
-}
-
-.idSocial {
-  width: 44px;
-  height: 44px;
-  border-radius: 999px;
-  border: 0;
-  background: #fff;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
-
-.idG {
-  color: #111;
-  font-weight: 900;
-  font-size: 16px;
+  margin-top: 16px;
 }
 
 .idRegister {
-  margin-left: auto;
+  width: 100%;
   height: 44px;
-  padding: 0 14px;
   border-radius: 999px;
   border: 0;
   background: #fff;
@@ -721,9 +716,10 @@
 
 .rightStack{
   width: 100%;
+  max-width: var(--cardW);
   display: flex;
   flex-direction: column;
-  align-items: center;  /* ให้โลโก้กับการ์ดอยู่กึ่งกลางแนวตั้งเดียวกัน */
+  align-items: center;
   gap: 26px;
 }
 
@@ -733,4 +729,509 @@
   object-fit: contain;
   opacity: 0.95;
   margin-top: -6px;
+}
+
+/* =========================================================
+   Flip card (front/back)
+   ========================================================= */
+
+.flipWrap{
+  width: 100%;
+  max-width: var(--cardW);
+  min-height: var(--cardH);
+
+  /* กรอบนอกไม่ต้อง clip */
+  overflow: visible;
+
+  perspective: 1800px;
+  perspective-origin: center;
+}
+
+.flipInner{
+  position: relative;
+  width: 100%;
+  min-height: var(--cardH);
+
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+
+  transition: transform 920ms cubic-bezier(.16, 1, .3, 1);
+  will-change: transform;
+
+  /* ✅ ให้เงา/มุมโค้ง “ไปกับการ์ด” ระหว่างหมุน (ไม่เป็นกรอบ) */
+  border-radius: var(--cardR);
+  box-shadow: var(--cardShadow);
+  transform: translateZ(0);
+}
+
+.flipWrap[data-flipped="true"] .flipInner{
+  transform: rotateY(180deg);
+}
+
+.flipFace{
+  position: absolute;
+  inset: 0;
+
+  /* ✅ คลิปมุมโค้งที่แต่ละหน้าแทน (ปลอดภัยกว่า clip-path) */
+  border-radius: inherit;
+  overflow: hidden;
+
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.flipFront{ transform: rotateY(0deg); }
+.flipBack { transform: rotateY(180deg); }
+
+/* กันเงาซ้อนจากการ์ดหน้า login */
+.flipInner .idCard{
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  border-radius: inherit;
+  box-shadow: none;
+}
+/* =========================================================
+   Register Back Face — Red ID Card style (match login card)
+   ========================================================= */
+
+.regBack{
+  height: 100%;
+  border-radius: var(--cardR);
+  overflow: hidden;
+
+  /* โครงสีแดงเหมือนบัตรหน้า login */
+  background: #d61f2c;
+  color: #fff;
+  position: relative;
+
+  /* กันพื้นที่แถบซ้าย */
+  padding: 26px 26px 24px;
+  padding-left: 26px;
+}
+
+/* แถบเขียวซ้าย */
+.regTeal{
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 55px;            /* ปรับได้ให้เหมือน Figma */
+  background: #0aa7a0;
+}
+
+/* ให้เนื้อหาอยู่เหนือแถบ */
+.regContent{
+  position: relative;
+  z-index: 2;
+
+  /* ขยับให้พ้นแถบเขียว */
+  margin-left: 28px;
+  padding-left: 18px;
+}
+
+.regTitle{
+  margin: 0;
+  font-size: 44px;
+  font-weight: 700;
+  letter-spacing: -0.6px;
+  line-height: 1;
+}
+
+.regSub{
+  margin: 8px 0 16px;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+/* ฟอร์ม */
+.regForm{
+  display: grid;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+/* input ให้เหมือนหน้า login */
+.regInput{
+  width: 100%;
+  padding: 12 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.45);
+  outline: none;
+  background: rgba(255,255,255,0.95);
+  color: #111;
+  font-size: 14px;
+
+  user-select: text;
+  -webkit-user-select: text;
+  -ms-user-select: text;
+}
+.regInput::placeholder{
+  color: rgba(0,0,0,0.35);
+}
+
+.regInput:focus{
+  border-color: rgba(0,0,0,0.95);
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.18);
+}
+
+/* เส้นคั่น */
+.regDivider{
+  margin: 6px 0 2px;
+  height: 1px;
+  background: rgba(255,255,255,0.35);
+}
+
+/* แถวปุ่มล่าง */
+.regBottomRow{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+/* ปุ่มสี่เหลี่ยมขาว */
+.regPrimary{
+  flex: 1;
+  height: 44px;
+  border-radius: 999px;
+  border: 0;
+  background: #fff;
+  color: rgba(16, 24, 39, 0.92);
+  font-weight: 900;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.regPrimary:disabled{
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.regLoginPill{
+  flex: 1;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 0;
+  background: #fff;
+  color: rgba(16, 24, 39, 0.92);
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+/* error/hint ให้เข้ากับพื้นแดง */
+.regErr{
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.16);
+  border: 1px solid rgba(255,255,255,0.22);
+  color: rgba(255,255,255,0.95);
+  font-size: 13px;
+}
+
+.regHint{
+  margin-top: 12px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.85);
+}
+.regHint code{
+  color: rgba(255,255,255,0.95);
+}
+
+/* ===== Shared card frame: use same outer box for Login + Register ===== */
+.cardFrame{
+  width: min(420px, 100%);
+  min-height: 520px;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+}
+
+/* ให้การ์ดด้านในยืดเต็มกรอบ และไม่ทำเงาซ้อน */
+.cardFrame .idCard{
+  width: 100%;
+  border-radius: inherit;
+  box-shadow: none;
+}
+
+/* =========================================================
+   Button micro-interactions (hover/press/focus)
+   ========================================================= */
+
+/* จับปุ่มหลัก/รอง + ปุ่มในบัตร + ปุ่ม register */
+.primary,
+.secondary,
+.idLoginBtn,
+.idSocial,
+.idRegister,
+.regPrimary,
+.regSecondary,
+.regLoginPill{
+  transition:
+    transform var(--t-fast,160ms) var(--ease, cubic-bezier(.2,.8,.2,1)),
+    box-shadow var(--t-med,220ms) var(--ease, cubic-bezier(.2,.8,.2,1)),
+    filter var(--t-med,220ms) var(--ease, cubic-bezier(.2,.8,.2,1)),
+    background-color var(--t-med,220ms) var(--ease, cubic-bezier(.2,.8,.2,1)),
+    border-color var(--t-med,220ms) var(--ease, cubic-bezier(.2,.8,.2,1)),
+    color var(--t-med,220ms) var(--ease, cubic-bezier(.2,.8,.2,1));
+  will-change: transform;
+  outline: none;
+}
+
+/* Hover: ยกขึ้นนิด + เงาเพิ่ม */
+.primary:hover:not(:disabled),
+.secondary:hover:not(:disabled),
+.idLoginBtn:hover:not(:disabled),
+.idSocial:hover,
+.idRegister:hover,
+.regPrimary:hover:not(:disabled),
+.regSecondary:hover:not(:disabled),
+.regLoginPill:hover{
+  transform: translateY(-2px);
+  filter: brightness(1.02);
+  box-shadow: 0 14px 28px rgba(0,0,0,0.14);
+}
+
+/* Active (กด): กดลงนิด */
+.primary:active:not(:disabled),
+.secondary:active:not(:disabled),
+.idLoginBtn:active:not(:disabled),
+.idSocial:active,
+.idRegister:active,
+.regPrimary:active:not(:disabled),
+.regSecondary:active:not(:disabled),
+.regLoginPill:active{
+  transform: translateY(0px) scale(0.98);
+  box-shadow: 0 10px 18px rgba(0,0,0,0.12);
+}
+
+/* Focus-visible: วงแหวน (keyboard friendly) */
+.primary:focus-visible,
+.secondary:focus-visible,
+.idLoginBtn:focus-visible,
+.idSocial:focus-visible,
+.idRegister:focus-visible,
+.regPrimary:focus-visible,
+.regSecondary:focus-visible,
+.regLoginPill:focus-visible{
+  box-shadow: 0 0 0 4px rgba(46,125,50,0.18), 0 14px 28px rgba(0,0,0,0.14);
+}
+
+/* Disabled: นุ่ม ๆ */
+.primary:disabled,
+.idLoginBtn:disabled,
+.regPrimary:disabled{
+  transform: none;
+  filter: none;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
+/* ลด motion สำหรับคนเปิด reduce motion */
+@media (prefers-reduced-motion: reduce){
+  .primary,
+  .secondary,
+  .idLoginBtn,
+  .idSocial,
+  .idRegister,
+  .regPrimary,
+  .regSecondary,
+  .regLoginPill{
+    transition: none !important;
+  }
+}
+
+/* =========================================================
+   Input micro-interactions
+   ========================================================= */
+
+.idInput,
+.regInput,
+.input{
+  transition:
+    border-color var(--t-med,220ms) var(--ease, cubic-bezier(.2,.8,.2,1)),
+    box-shadow var(--t-med,220ms) var(--ease, cubic-bezier(.2,.8,.2,1)),
+    transform var(--t-fast,160ms) var(--ease, cubic-bezier(.2,.8,.2,1));
+}
+
+.idInput:focus,
+.regInput:focus,
+.input:focus{
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   Left hover interactions + shine sweep
+   (feature / badge / kicker)
+   ========================================================= */
+
+.feature,
+.badge,
+.kicker{
+  position: relative;            /* ให้ pseudo-element อ้างอิง */
+  overflow: hidden;              /* clip แสงให้ไม่ล้น */
+  isolation: isolate;            /* กัน blend ลามไปชั้นอื่น */
+
+  transition:
+    transform var(--t-fast,160ms) var(--ease, cubic-bezier(.2,.8,.2,1)),
+    box-shadow var(--t-med,220ms) var(--ease, cubic-bezier(.2,.8,.2,1)),
+    background-color var(--t-med,220ms) var(--ease, cubic-bezier(.2,.8,.2,1)),
+    border-color var(--t-med,220ms) var(--ease, cubic-bezier(.2,.8,.2,1)),
+    filter var(--t-med,220ms) var(--ease, cubic-bezier(.2,.8,.2,1));
+  will-change: transform;
+}
+
+/* ตัวแสง */
+.feature::after,
+.badge::after,
+.kicker::after{
+  content: "";
+  position: absolute;
+  inset: -40% -60%;              /* ขยายพื้นที่ให้ sweep ยาว */
+  z-index: 0;
+  pointer-events: none;
+
+  /* แถบแสงเฉียง */
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    rgba(255,255,255,0.00) 38%,
+    rgba(255,255,255,0.55) 50%,
+    rgba(255,255,255,0.00) 62%,
+    transparent 100%
+  );
+
+  transform: translateX(-60%) translateY(0) rotate(0deg);
+  opacity: 0;
+}
+
+/* ให้เนื้อหาอยู่เหนือแสง */
+.feature > *,
+.badge > *,
+.kicker > *{
+  position: relative;
+  z-index: 1;
+}
+
+/* Hover: ยกขึ้น + เงา + เริ่มแสงวิ่ง */
+.feature:hover,
+.badge:hover,
+.kicker:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 16px 34px rgba(0,0,0,0.10);
+  filter: brightness(1.02);
+  border-color: rgba(0,0,0,0.12);
+}
+
+.feature:hover::after,
+.badge:hover::after,
+.kicker:hover::after{
+  opacity: 0.9;
+  animation: shineSweep 900ms cubic-bezier(.2,.8,.2,1) 1;
+}
+
+/* กดเมาส์ลงเล็กน้อย */
+.feature:active,
+.badge:active,
+.kicker:active{
+  transform: translateY(-1px) scale(0.99);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+}
+
+/* ปรับพื้นให้ feature ดู glass ขึ้นเล็กน้อย */
+.feature:hover{
+  background: rgba(255, 255, 255, 0.62);
+}
+
+@keyframes shineSweep{
+  0%   { transform: translateX(-65%); opacity: 0; }
+  15%  { opacity: 0.95; }
+  100% { transform: translateX(65%); opacity: 0; }
+}
+
+/* ลด motion */
+@media (prefers-reduced-motion: reduce){
+  .feature,
+  .badge,
+  .kicker{
+    transition: none !important;
+  }
+  .feature::after,
+  .badge::after,
+  .kicker::after{
+    display: none;
+  }
+  .feature:hover,
+  .badge:hover,
+  .kicker:hover{
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/* ===== Floating error toast inside ID card ===== */
+.idBody{ position: relative; } /* ของคุณมีอยู่แล้วก็ไม่เป็นไร */
+
+.idToastErr{
+  position: absolute;
+
+  /* ให้ยึดตามขอบ padding ของ card และไม่ทับแถบเขียว */
+  left: 26px;
+  right: calc(var(--tealW) + 22px);
+
+  /* ปรับตำแหน่งตามการ์ดคุณ: แนะนำเริ่มที่ 112-130px */
+  top: 118px;
+
+  z-index: 20;
+  padding: 10px 12px;
+  border-radius: 14px;
+
+  background: rgba(0,0,0,0.28);
+  border: 1px solid rgba(255,255,255,0.28);
+  backdrop-filter: blur(10px);
+
+  color: rgba(255,255,255,0.96);
+  font-size: 13px;
+  line-height: 1.35;
+
+  box-shadow: 0 18px 34px rgba(0,0,0,0.22);
+  animation: toastIn 180ms cubic-bezier(.2,.8,.2,1);
+}
+
+@keyframes toastIn{
+  from{ transform: translateY(-8px); opacity: 0; }
+  to{ transform: translateY(0); opacity: 1; }
+}
+
+.regBack{ position: relative; }
+
+.regToastErr{
+  position: absolute;
+  left: 18px;                 /* ชิดแถบเขียวได้ */
+  right: 18px;
+  top: 18px;
+  z-index: 20;
+
+  padding: 10px 12px;
+  border-radius: 14px;
+
+  background: rgba(0,0,0,0.28);
+  border: 1px solid rgba(255,255,255,0.28);
+  backdrop-filter: blur(10px);
+
+  color: rgba(255,255,255,0.96);
+  font-size: 13px;
+  line-height: 1.35;
+
+  box-shadow: 0 18px 34px rgba(0,0,0,0.22);
+  animation: toastIn 180ms cubic-bezier(.2,.8,.2,1);
+}
+
+/* ใช้ keyframes เดียวกับ login ได้ */
+@keyframes toastIn{
+  from{ transform: translateY(-8px); opacity: 0; }
+  to{ transform: translateY(0); opacity: 1; }
 }
