@@ -1,0 +1,174 @@
+.root {
+  height: 100vh;        /* ล็อกสูงเท่าหน้าจอ */
+  overflow: hidden;     /* กันไม่ให้ทั้งหน้าเลื่อน */
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+}
+
+.shellRow {
+  flex: 1;
+  display: flex;
+  height: 100%;
+  min-height: 0;        /* สำคัญกับ flex + overflow */
+}
+
+.sidebar {
+  width: 220px;
+  height: 100%;
+  position: sticky;
+  top: 0;
+  overflow: auto;       /* ถ้าเมนูยาว จะเลื่อนเฉพาะ sidebar */
+  border-right: 1px solid #e5e7eb;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.brandBadge {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: #e11d48;
+  color: #ffffff;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  user-select: none;
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.brandTitle {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.brandSub {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.nav {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.navLink {
+  text-decoration: none;
+  color: #0f172a;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  transition: background 120ms ease, transform 120ms ease;
+}
+
+.navLink:hover {
+  background: #eef2ff;
+  transform: translateY(-1px);
+}
+
+.navLinkActive {
+  background: #e0f2fe;
+  font-weight: 700;
+}
+
+.sidebarSpacer {
+  flex: 1;
+}
+
+.sideBottom {
+  padding: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.logoutBtn {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.logoutBtn:hover {
+  background: #f1f5f9;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;        /* สำคัญ */
+}
+
+.topBar {
+  position: sticky;     /* ให้หัวติดบน */
+  top: 0;
+  z-index: 50;
+  height: 56px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 16px;
+  background: #ffffff;
+}
+
+.userPill {
+  font-size: 13px;
+  color: #334155;
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  padding: 6px 10px;
+  border-radius: 999px;
+}
+
+.content {
+  flex: 1;
+  padding: 24px;
+  overflow: auto;       /* ✅ scroll อยู่ตรงนี้ */
+  min-height: 0;        /* ✅ สำคัญ */
+}
+
+.footerBar {
+  background: #0f766e;
+  padding: 14px 16px;
+}
+
+.footerInner {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.footerLogos {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.footerLogo {
+  height: 28px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(1);
+}
