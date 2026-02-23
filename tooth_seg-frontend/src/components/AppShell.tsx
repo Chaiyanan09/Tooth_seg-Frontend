@@ -8,9 +8,7 @@ import { api } from "@/lib/api";
 import { auth } from "@/lib/auth";
 import Image from "next/image";
 
-type Me = {
-  fullName: string;
-};
+type Me = { fullName: string };
 
 type AppShellCtx = {
   user: Me | null;
@@ -23,12 +21,8 @@ export function useAppUser() {
   return useContext(Ctx);
 }
 
-type NavItem = {
-  label: string;
-  href: string;
-};
+type NavItem = { label: string; href: string };
 
-// ✅ ถ้า Home ของคุณอยู่ /home ให้ใช้แบบนี้
 const NAV: NavItem[] = [
   { label: "Home", href: "/home" },
   { label: "News", href: "/news" },
@@ -50,13 +44,12 @@ function isActive(href: string, pathname: string) {
   const h = normalizePath(href);
   const p = normalizePath(pathname);
 
-  // ให้ Home ติดทั้ง "/home" และ "/"
   if (h === "/home") return p === "/home" || p === "/";
   if (h === "/") return p === "/" || p === "/home";
-
-  // route อื่น ๆ ติดเมื่ออยู่หน้าเดียวกัน หรืออยู่ใต้ path นั้น
   return p === h || p.startsWith(h + "/");
 }
+
+const LOGOUT_ANIM_MS = 520;
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -65,9 +58,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<Me | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // ✅ NEW
+  const [leaving, setLeaving] = useState(false);
+
   useEffect(() => {
     if (!auth.get()) {
-      router.push("/login");
+      router.replace("/login");
       return;
     }
 
@@ -82,7 +78,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       })
       .catch(() => {
         auth.clear();
-        router.push("/login");
+        router.replace("/login");
       })
       .finally(() => {
         if (!alive) return;
@@ -97,15 +93,22 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const ctxValue = useMemo(() => ({ user, loading }), [user, loading]);
 
   const onLogout = () => {
-    auth.clear();
-    router.push("/login");
+    if (leaving) return;
+
+    // ✅ เล่น exit animation ก่อน
+    setLeaving(true);
+
+    window.setTimeout(() => {
+      auth.clear();
+      router.replace("/login");
+    }, LOGOUT_ANIM_MS);
   };
 
   return (
     <Ctx.Provider value={ctxValue}>
-      <div className={styles.root}>
+      {/* ✅ IMPORTANT: apply rootLeaving class */}
+      <div className={cx(styles.root, leaving && styles.rootLeaving)}>
         <div className={styles.shellRow}>
-          {/* ✅ 1) sidebar */}
           <aside className={styles.sidebar} data-shell="sidebar">
             <div className={styles.brand}>
               <Image
@@ -116,7 +119,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 className={styles.brandLogo}
                 priority
               />
-
               <div className={styles.brandText}>
                 <div className={styles.brandTitle}>ToothInSeg</div>
                 <div className={styles.brandSub}>Dental X-ray AI</div>
@@ -131,6 +133,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     key={item.href}
                     href={item.href}
                     className={cx(styles.navLink, active && styles.navLinkActive)}
+                    aria-disabled={leaving ? "true" : "false"}
+                    tabIndex={leaving ? -1 : 0}
                   >
                     {item.label}
                   </Link>
@@ -141,21 +145,24 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <div className={styles.sidebarSpacer} />
 
             <div className={styles.sideBottom}>
-              <button className={styles.logoutBtn} onClick={onLogout} type="button">
+              <button
+                className={styles.logoutBtn}
+                onClick={onLogout}
+                type="button"
+                disabled={leaving}
+              >
                 Logout
               </button>
             </div>
           </aside>
 
           <main className={styles.main}>
-            {/* ✅ 2) topbar */}
             <header className={styles.topBar} data-shell="topbar">
               <div className={styles.userPill}>
                 {loading ? "..." : user?.fullName ?? "Guest"}
               </div>
             </header>
 
-            {/* ✅ 3) content */}
             <div className={styles.content} data-shell="content">
               {children}
             </div>
