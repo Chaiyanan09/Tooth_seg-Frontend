@@ -25,7 +25,7 @@ type NavItem = { label: string; href: string };
 
 const NAV: NavItem[] = [
   { label: "Home", href: "/home" },
-  { label: "News", href: "/news" },
+  { label: "Guide", href: "/guide" },
   { label: "ToothInSeg", href: "/toothinseg" },
   { label: "History", href: "/history" },
   { label: "Profile", href: "/profile" },
