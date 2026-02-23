@@ -6,59 +6,60 @@ import { api } from "@/lib/api";
 import { auth } from "@/lib/auth";
 import styles from "./login.module.css";
 import StudentIDCard from "./StudentIDCard";
-import AuthFlipCard from "../register/AuthFlipCard";
 
 export default function LoginPage() {
   const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [loading, setLoading] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
-  e.preventDefault();
+    e.preventDefault();
+    if (loading || leaving) return;
 
-  const e1 = email.trim();
-  const p1 = password;
+    const e1 = email.trim();
+    const p1 = password;
 
-  // ✅ กรอกไม่ครบ -> toast ทันที (แทนที่ toast เดิม)
-  if (!e1 && !p1) {
-    setErr("Please fill in your email and password.");
-    return;
-  }
-  if (!e1) {
-    setErr("Please enter your email.");
-    return;
-  }
-  if (!p1) {
-    setErr("Please enter your password.");
-    return;
-  }
+    // toast validation
+    if (!e1 && !p1) return void setErr("Please fill in your email and password.");
+    if (!e1) return void setErr("Please enter your email.");
+    if (!p1) return void setErr("Please enter your password.");
 
-  setErr(null);
-  setLoading(true);
-  try {
-    const r = await api.login(e1, p1);
-    auth.set(r.accessToken);
-    router.push("/home");
-  } catch (ex: any) {
-    setErr(ex.message || "Login failed: Invalid email or password.");
-  } finally {
-    setLoading(false);
+    setErr(null);
+    setLoading(true);
+
+    try {
+      const r = await api.login(e1, p1);
+      auth.set(r.accessToken);
+
+      // ✅ play exit animation ONLY when login success
+      setLeaving(true);
+
+      // must match CSS duration (e.g., 620ms)
+      window.setTimeout(() => {
+        router.push("/home");
+      }, 620);
+    } catch (ex: any) {
+      setErr(ex?.message || "Login failed: Invalid email or password.");
+      setLoading(false);
+    }
   }
-}
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} ${leaving ? styles.pageLeaving : ""}`}>
       <div className={styles.shell}>
-        <section className={styles.left}>
-          {/* ✅ TOP-LEFT DENTISTRY LOGO (layer above bg) */}
+        {/* LEFT */}
+        <section className={`${styles.left} ${leaving ? styles.leftExit : ""}`}>
           <img
             src="/assets/Collab2.png"
+            alt="Dentistry logo"
             className={styles.leftTopLogo}
           />
 
-          {/* keep your existing decor circles */}
           <div className={styles.decor1} />
           <div className={styles.decor2} />
           <div className={styles.decor3} />
@@ -68,9 +69,9 @@ export default function LoginPage() {
               <div className={styles.kicker}>Clinical AI • Web App</div>
               <h1 className={styles.leftTitle}>Tooth Segmentation</h1>
               <p className={styles.leftDesc}>
-                Upload a panoramic X-ray to run instance segmentation + FDI
-                numbering. Review overlays and a structured table (FDI,
-                confidence, area, position), then export PNG + JSON for reporting.
+                Upload a panoramic X-ray to run instance segmentation + FDI numbering.
+                Review overlays and a structured table (FDI, confidence, area, position),
+                then export PNG + JSON for reporting.
               </p>
             </div>
 
@@ -110,30 +111,30 @@ export default function LoginPage() {
           </div>
         </section>
 
-        {/* RIGHT: Student ID card */}
-        <section className={styles.right}>
+        {/* RIGHT */}
+        <section className={`${styles.right} ${leaving ? styles.rightExit : ""}`}>
           <div className={styles.rightStack}>
-            <img src="/assets/VLU_logo_text.png" alt="..." className={styles.rightTopLogo} />
-
-            <AuthFlipCard
-              flipped={false}
-              autoFlip={false}
-              front={
-                <StudentIDCard
-                  email={email}
-                  password={password}
-                  loading={loading}
-                  err={err}
-                  apiBase={process.env.NEXT_PUBLIC_API_BASE}
-                  onEmailChange={setEmail}
-                  onPasswordChange={setPassword}
-                  onSubmit={onSubmit}
-                  onForgot={() => router.push("/forgot-password")}
-                  onRegister={() => router.push("/register")}
-                />
-              }
-              back={<div />} // ไม่ใช้
+            <img
+              src="/assets/VLU_logo_text.png"
+              alt="Van Lang University Dentistry"
+              className={`${styles.rightTopLogo} ${leaving ? styles.rightLogoExit : ""}`}
             />
+
+            {/* ✅ IMPORTANT: use the same fixed frame as Register (same width/height/radius) */}
+            <div className={`${styles.cardFrame} ${leaving ? styles.cardExit : ""}`}>
+              <StudentIDCard
+                email={email}
+                password={password}
+                loading={loading || leaving}
+                err={err}
+                apiBase={process.env.NEXT_PUBLIC_API_BASE}
+                onEmailChange={setEmail}
+                onPasswordChange={setPassword}
+                onSubmit={onSubmit}
+                onForgot={() => router.push("/forgot-password")}
+                onRegister={() => router.push("/register")}
+              />
+            </div>
           </div>
         </section>
       </div>
