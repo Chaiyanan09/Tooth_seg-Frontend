@@ -387,3 +387,181 @@
     flex-direction: column;
   }
 }
+
+/* =========================================================
+   Profile — Mouse interactions (hover + shine) like Login/Home
+   ========================================================= */
+
+/* ✅ กล่องหลักทั้งหมดที่อยากให้ hover */
+.userCard,
+.statCard,
+.card,
+.sideCard {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate; /* กัน shine ล้น/เพี้ยน */
+  transition:
+    transform 240ms cubic-bezier(.22, 1, .36, 1),
+    box-shadow 240ms cubic-bezier(.22, 1, .36, 1),
+    border-color 240ms cubic-bezier(.22, 1, .36, 1),
+    filter 240ms cubic-bezier(.22, 1, .36, 1);
+  will-change: transform;
+  cursor: default; /* ไม่ทำให้เหมือนปุ่ม */
+}
+
+/* shine layer */
+.userCard::after,
+.statCard::after,
+.card::after,
+.sideCard::after {
+  content: "";
+  position: absolute;
+  inset: -60%;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 2;
+  mix-blend-mode: soft-light;
+
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.30) 42%,
+    rgba(255, 255, 255, 0.08) 52%,
+    transparent 100%
+  );
+
+  transform: translateX(-60%) rotate(18deg);
+  transition: opacity 160ms ease;
+}
+
+.userCard:hover,
+.statCard:hover,
+.card:hover,
+.sideCard:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.12);
+  filter: saturate(1.03);
+}
+
+.userCard:hover::after,
+.statCard:hover::after,
+.card:hover::after,
+.sideCard:hover::after {
+  opacity: 1;
+  animation: profileShine 720ms cubic-bezier(.22, 1, .36, 1);
+}
+
+@keyframes profileShine {
+  from { transform: translateX(-70%) rotate(18deg); }
+  to   { transform: translateX(70%) rotate(18deg); }
+}
+
+/* =========================================================
+   Buttons — hover/press micro-interactions
+   ========================================================= */
+
+.btnPrimary,
+.btnOutline,
+.btnGhost {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 160ms cubic-bezier(.22, 1, .36, 1),
+    box-shadow 160ms cubic-bezier(.22, 1, .36, 1),
+    filter 160ms cubic-bezier(.22, 1, .36, 1);
+  will-change: transform;
+}
+
+.btnPrimary:hover,
+.btnOutline:hover,
+.btnGhost:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.10);
+  filter: saturate(1.03);
+}
+
+.btnPrimary:active,
+.btnOutline:active,
+.btnGhost:active {
+  transform: translateY(0px) scale(0.99);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.10);
+}
+
+/* shine for buttons */
+.btnPrimary::after,
+.btnOutline::after,
+.btnGhost::after {
+  content: "";
+  position: absolute;
+  inset: -70%;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.32) 45%,
+    rgba(255, 255, 255, 0.10) 55%,
+    transparent 100%
+  );
+  transform: translateX(-60%) rotate(18deg);
+  transition: opacity 140ms ease;
+}
+
+.btnPrimary:hover::after,
+.btnOutline:hover::after,
+.btnGhost:hover::after {
+  opacity: 1;
+  animation: profileBtnShine 650ms cubic-bezier(.22, 1, .36, 1);
+}
+
+@keyframes profileBtnShine {
+  from { transform: translateX(-70%) rotate(18deg); }
+  to   { transform: translateX(70%) rotate(18deg); }
+}
+
+/* keyboard focus (สวยและใช้งานได้) */
+.btnPrimary:focus-visible,
+.btnOutline:focus-visible,
+.btnGhost:focus-visible {
+  outline: 3px solid rgba(0, 0, 0, 0.18);
+  outline-offset: 3px;
+}
+
+/* =========================================================
+   Tips list — subtle hover (optional)
+   ========================================================= */
+
+.tipList li {
+  transition: transform 160ms cubic-bezier(.22, 1, .36, 1),
+              opacity 160ms ease;
+}
+
+.tipList li:hover {
+  transform: translateX(2px);
+  opacity: 0.95;
+}
+
+/* =========================================================
+   Reduce motion
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .userCard,
+  .statCard,
+  .card,
+  .sideCard,
+  .btnPrimary,
+  .btnOutline,
+  .btnGhost,
+  .tipList li,
+  .userCard::after,
+  .statCard::after,
+  .card::after,
+  .sideCard::after,
+  .btnPrimary::after,
+  .btnOutline::after,
+  .btnGhost::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

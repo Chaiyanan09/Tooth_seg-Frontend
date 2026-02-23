@@ -1,0 +1,76 @@
+.shellWrap{
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------- 1) Shell intro: เล่นครั้งเดียวหลัง login ---------- */
+.shellIntro [data-shell="sidebar"]{
+  animation: sidebarIn 520ms cubic-bezier(.16,1,.3,1) both;
+}
+.shellIntro [data-shell="topbar"]{
+  animation: topbarIn 520ms cubic-bezier(.16,1,.3,1) both;
+}
+
+/* ถ้าคุณอยากให้ “content” ไม่ต้อง intro พร้อม shell ให้ลบอันนี้ */
+.shellIntro [data-shell="content"]{
+  animation: contentSoftIn 520ms cubic-bezier(.16,1,.3,1) both;
+}
+
+@keyframes sidebarIn{
+  from { opacity: 0; transform: translateX(-10px); filter: blur(2px); }
+  to   { opacity: 1; transform: translateX(0);    filter: blur(0); }
+}
+@keyframes topbarIn{
+  from { opacity: 0; transform: translateY(-8px); filter: blur(2px); }
+  to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+}
+@keyframes contentSoftIn{
+  from { opacity: 0; transform: translateY(8px); filter: blur(2px); }
+  to   { opacity: 1; transform: translateY(0);   filter: blur(0); }
+}
+
+/* ---------- 2) Content transition: เล่นทุกครั้งที่เปลี่ยนหน้า ---------- */
+.contentWrap{
+  width: 100%;
+  height: 100%;
+}
+
+.contentIn{
+  animation: contentIn 320ms cubic-bezier(.22,1,.36,1) both; /* ✅ ease แบบนุ่ม */
+  will-change: transform, opacity, filter;
+}
+
+@keyframes contentIn{
+  from { opacity: 0; transform: translateY(10px); filter: blur(2px); }
+  to   { opacity: 1; transform: translateY(0);  filter: blur(0); }
+}
+
+/* ลด motion */
+@media (prefers-reduced-motion: reduce){
+  .shellIntro [data-shell="sidebar"],
+  .shellIntro [data-shell="topbar"],
+  .shellIntro [data-shell="content"],
+  .contentIn{ animation: none !important; }
+}
+
+/* content area: no I-beam cursor on text */
+.content{
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* interactive */
+.content a,
+.content button{
+  cursor: pointer;
+}
+
+/* allow typing */
+.content input,
+.content textarea,
+.content [contenteditable="true"]{
+  cursor: text;
+  user-select: text;
+  -webkit-user-select: text;
+}
