@@ -353,3 +353,121 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================================
+   Hover interaction (shine) — Home right-side cards
+   - ใช้กับ: .profileCard, .miniCard (และเพิ่ม .imageCard/.featureMedia ได้)
+   ========================================================= */
+
+/* ✅ เลือกกล่องที่ต้องการให้มี interaction */
+.profileCard,
+.miniCard,
+.imageCard,
+.featureMedia {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate; /* กัน blend/overlay ไหลออกนอกกล่อง */
+  transition:
+    transform 240ms cubic-bezier(.22, 1, .36, 1),
+    box-shadow 240ms cubic-bezier(.22, 1, .36, 1),
+    border-color 240ms cubic-bezier(.22, 1, .36, 1),
+    filter 240ms cubic-bezier(.22, 1, .36, 1);
+  will-change: transform;
+  cursor: default; /* ไม่หลอกว่าเป็นปุ่ม แต่ยังมี interaction */
+}
+
+/* shine layer */
+.profileCard::after,
+.miniCard::after,
+.imageCard::after,
+.featureMedia::after {
+  content: "";
+  position: absolute;
+  inset: -60%;
+  pointer-events: none;
+  opacity: 0;
+
+  /* แสงวิ่งเฉียง */
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.30) 42%,
+    rgba(255, 255, 255, 0.08) 52%,
+    transparent 100%
+  );
+
+  transform: translateX(-60%) rotate(18deg);
+  transition: opacity 160ms ease;
+  z-index: 2;
+  mix-blend-mode: soft-light; /* ทำให้เนียนกับพื้นหลัง (ถ้าไม่ชอบลบได้) */
+}
+
+/* hover lift */
+.profileCard:hover,
+.miniCard:hover,
+.imageCard:hover,
+.featureMedia:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.12);
+  filter: saturate(1.03);
+}
+
+/* shine play */
+.profileCard:hover::after,
+.miniCard:hover::after,
+.imageCard:hover::after,
+.featureMedia:hover::after {
+  opacity: 1;
+  animation: homeShine 720ms cubic-bezier(.22, 1, .36, 1);
+}
+
+@keyframes homeShine {
+  from { transform: translateX(-70%) rotate(18deg); }
+  to   { transform: translateX(70%) rotate(18deg); }
+}
+
+/* ✅ ถ้าภายในมี element ที่โฟกัสได้ (เช่น link/button) ให้สวยตอน focus */
+.profileCard:focus-within,
+.miniCard:focus-within,
+.imageCard:focus-within,
+.featureMedia:focus-within {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.12);
+}
+
+/* ลด motion */
+@media (prefers-reduced-motion: reduce) {
+  .profileCard,
+  .miniCard,
+  .imageCard,
+  .featureMedia,
+  .profileCard::after,
+  .miniCard::after,
+  .imageCard::after,
+  .featureMedia::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ===== Disable text cursor / selection on Home (except inputs) ===== */
+.page{
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ลิงก์/ปุ่มยังคงเป็น pointer */
+.page a,
+.page button{
+  cursor: pointer;
+}
+
+/* ถ้าวันหลังหน้า home มี input/textarea ให้พิมพ์ได้ตามปกติ */
+.page input,
+.page textarea,
+.page [contenteditable="true"]{
+  cursor: text;
+  user-select: text;
+  -webkit-user-select: text;
+}

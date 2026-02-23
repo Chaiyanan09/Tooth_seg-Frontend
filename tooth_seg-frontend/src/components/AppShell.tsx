@@ -105,7 +105,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <Ctx.Provider value={ctxValue}>
       <div className={styles.root}>
         <div className={styles.shellRow}>
-          <aside className={styles.sidebar}>
+          {/* ✅ 1) sidebar */}
+          <aside className={styles.sidebar} data-shell="sidebar">
             <div className={styles.brand}>
               <Image
                 src="/assets/VLU_logo.png"
@@ -147,13 +148,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </aside>
 
           <main className={styles.main}>
-            <header className={styles.topBar}>
+            {/* ✅ 2) topbar */}
+            <header className={styles.topBar} data-shell="topbar">
               <div className={styles.userPill}>
-                {loading ? "..." : (user?.fullName ?? "Guest")}
+                {loading ? "..." : user?.fullName ?? "Guest"}
               </div>
             </header>
 
-            <div className={styles.content}>{children}</div>
+            {/* ✅ 3) content */}
+            <div className={styles.content} data-shell="content">
+              {children}
+            </div>
           </main>
         </div>
       </div>

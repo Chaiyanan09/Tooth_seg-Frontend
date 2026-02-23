@@ -41,6 +41,7 @@ export default function LoginPage() {
 
       // must match CSS duration (e.g., 620ms)
       window.setTimeout(() => {
+        sessionStorage.setItem("after_login_shell_intro", "1");
         router.push("/home");
       }, 620);
     } catch (ex: any) {
