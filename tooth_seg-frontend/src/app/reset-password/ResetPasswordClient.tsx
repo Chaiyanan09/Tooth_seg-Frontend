@@ -1,52 +1,51 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import styles from "../forgot-password/forgot.module.css";
 
-type Props = {
-  token?: string;
-};
-
-export default function ResetPasswordClient({ token = "" }: Props) {
+export default function ResetPasswordClient() {
   const router = useRouter();
-  const [p1, setP1] = useState("");
-  const [p2, setP2] = useState("");
+  const sp = useSearchParams();
+  const token = sp.get("token") ?? "";
+
+  const [pw, setPw] = useState("");
+  const [cf, setCf] = useState("");
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  const [err, setErr] = useState<string | null>(null);
 
-  useEffect(() => {
-    const prevHtml = document.documentElement.style.overflow;
-    const prevBody = document.body.style.overflow;
-    document.documentElement.style.overflow = "hidden";
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.documentElement.style.overflow = prevHtml;
-      document.body.style.overflow = prevBody;
-    };
-  }, []);
+  const mismatch = useMemo(() => pw.length > 0 && cf.length > 0 && pw !== cf, [pw, cf]);
+  const pwTooShort = useMemo(() => pw.length > 0 && pw.length < 6, [pw]);
 
-  const mismatch = useMemo(() => p1 && p2 && p1 !== p2, [p1, p2]);
-  const tooShort = useMemo(() => p1 && p1.length < 6, [p1]);
-
-  async function submit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setErr(null);
     setMsg(null);
 
-    if (!token) return setErr("Missing token. Please request a new reset link.");
-    if (p1.length < 6) return setErr("Password must be at least 6 characters.");
-    if (p1 !== p2) return setErr("Passwords do not match.");
+    if (!token) {
+      setMsg("Missing token. Please request a new reset link.");
+      return;
+    }
+    if (!pw || !cf) {
+      setMsg("Please fill in both password fields.");
+      return;
+    }
+    if (pw.length < 6) {
+      setMsg("Password must be at least 6 characters.");
+      return;
+    }
+    if (pw !== cf) {
+      setMsg("Passwords do not match.");
+      return;
+    }
 
     setLoading(true);
     try {
-      const r = await api.resetPassword(token, p1, p2);
-      setMsg(r.message || "Password updated. Redirecting to login...");
-      setTimeout(() => router.push("/login"), 900);
+      await api.resetPassword(token, pw, cf);
+      setMsg("Password updated. Redirecting to login…");
+      setTimeout(() => router.push("/login"), 700);
     } catch (ex: any) {
-      setErr(ex.message || "Reset failed");
+      setMsg(ex?.message || "Reset failed. Please request a new link.");
     } finally {
       setLoading(false);
     }
@@ -54,59 +53,87 @@ export default function ResetPasswordClient({ token = "" }: Props) {
 
   return (
     <div className={styles.page}>
-      <div className={styles.decor1} />
-      <div className={styles.decor2} />
-      <div className={styles.decor3} />
+      <div className={styles.shell}>
+        <div className={styles.card}>
+          <h2 className={styles.title}>Reset password</h2>
+          <p className={styles.sub}>Enter your new password below.</p>
 
-      <div className={styles.card}>
-        <h1 className={styles.title}>Reset password</h1>
-        <p className={styles.sub}>Enter your new password below.</p>
-
-        <form className={styles.form} onSubmit={submit}>
-          <label className={styles.label}>
-            New password
-            <input
-              className={styles.input}
-              type="password"
-              value={p1}
-              onChange={(e) => setP1(e.target.value)}
-              autoComplete="new-password"
-            />
-          </label>
-
-          <label className={styles.label}>
-            Confirm new password
-            <input
-              className={styles.input}
-              type="password"
-              value={p2}
-              onChange={(e) => setP2(e.target.value)}
-              autoComplete="new-password"
-              style={
-                mismatch
-                  ? { borderColor: "rgba(229,57,53,0.55)", boxShadow: "0 0 0 4px rgba(229,57,53,0.10)" }
-                  : undefined
-              }
-            />
-          </label>
-
-          <div className={styles.row}>
-            <button className={styles.primary} type="submit" disabled={loading || !token || mismatch || !!tooShort}>
-              {loading ? "Updating..." : "Update password"}
-            </button>
-
-            <button className={styles.secondary} type="button" onClick={() => router.push("/login")}>
-              Back to login
-            </button>
-          </div>
-
-          {msg && <div className={styles.msg}>{msg}</div>}
-          {err && (
+          {!token && (
             <div className={styles.err}>
-              <b>Error:</b> {err}
+              <b>Error:</b> Missing token. Please request a new reset link.
             </div>
           )}
-        </form>
+
+          <form className={styles.form} onSubmit={onSubmit}>
+            <label className={styles.label}>
+              New password
+              <input
+                className={styles.input}
+                type="password"
+                value={pw}
+                onChange={(e) => setPw(e.target.value)}
+                autoComplete="new-password"
+                placeholder="••••••••"
+                required
+                style={
+                  pwTooShort
+                    ? { borderColor: "rgba(229,57,53,.35)", boxShadow: "0 0 0 4px rgba(229,57,53,.06)" }
+                    : undefined
+                }
+              />
+              {pwTooShort && (
+                <div style={{ marginTop: 6, fontSize: 12, color: "rgba(229,57,53,.85)" }}>
+                  Password must be at least 6 characters.
+                </div>
+              )}
+            </label>
+
+            <label className={styles.label}>
+              Confirm new password
+              <input
+                className={styles.input}
+                type="password"
+                value={cf}
+                onChange={(e) => setCf(e.target.value)}
+                autoComplete="new-password"
+                placeholder="••••••••"
+                required
+                style={
+                  mismatch
+                    ? { borderColor: "rgba(229,57,53,.55)", boxShadow: "0 0 0 4px rgba(229,57,53,.10)" }
+                    : undefined
+                }
+              />
+              {mismatch && (
+                <div style={{ marginTop: 6, fontSize: 12, color: "rgba(229,57,53,.85)" }}>
+                  Passwords do not match.
+                </div>
+              )}
+            </label>
+
+            <div className={styles.row}>
+              {/* ✅ ไม่ disable ด้วย canSubmit แล้ว กดได้เสมอ (ยกเว้นกำลังโหลด) */}
+              <button className={styles.primary} type="submit" disabled={loading}>
+                {loading ? "Please wait…" : "Update password"}
+              </button>
+
+              <button
+                className={styles.secondary}
+                type="button"
+                onClick={() => router.push("/login")}
+                disabled={loading}
+              >
+                Back to login
+              </button>
+            </div>
+
+            {msg && (
+              <div className={styles.err}>
+                <b>Info:</b> {msg}
+              </div>
+            )}
+          </form>
+        </div>
       </div>
     </div>
   );
