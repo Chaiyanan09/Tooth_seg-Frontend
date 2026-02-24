@@ -514,3 +514,22 @@
     transition: none !important;
   }
 }
+
+/* --- Scrollspy highlight --- */
+.tocLinkActive {
+  background: rgba(229, 57, 53, 0.10);
+  border: 1px solid rgba(229, 57, 53, 0.22);
+  color: rgba(0, 0, 0, 0.88);
+  font-weight: 800;
+  position: relative;
+}
+
+.tocLinkActive::before {
+  content: "";
+  width: 4px;
+  height: 16px;
+  border-radius: 999px;
+  background: rgba(229, 57, 53, 0.85);
+  margin-right: 10px;
+  display: inline-block;
+}

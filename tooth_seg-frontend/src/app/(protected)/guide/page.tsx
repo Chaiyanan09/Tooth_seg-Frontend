@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styles from "./guide.module.css";
 
 type TocItem = { id: string; label: string };
@@ -22,6 +22,9 @@ export default function GuidePage() {
     []
   );
 
+  // ✅ Scrollspy active section id
+  const [activeId, setActiveId] = useState<string>(toc[0]?.id ?? "overview");
+
   // ✅ Scroll reveal (slide-in blocks) + ✅ scroll out -> hide (toggle)
   useEffect(() => {
     const prefersReduced =
@@ -40,20 +43,60 @@ export default function GuidePage() {
       (entries) => {
         for (const e of entries) {
           const el = e.target as HTMLElement;
-          if (e.isIntersecting) {
-            el.setAttribute("data-in", "true");
-          } else {
-            el.removeAttribute("data-in");
-          }
+          if (e.isIntersecting) el.setAttribute("data-in", "true");
+          else el.removeAttribute("data-in");
         }
       },
-      {
-        threshold: 0.14,
-        rootMargin: "0px 0px -12% 0px",
-      }
+      { threshold: 0.14, rootMargin: "0px 0px -12% 0px" }
     );
 
     els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+
+  // ✅ Scrollspy (highlight toc) — ใช้ IntersectionObserver
+  useEffect(() => {
+    const sections = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-spy][id]")
+    );
+    if (!sections.length) return;
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          // เอาตัวที่อยู่ "ใกล้ top" กว่าเป็น active
+          .sort((a, b) => (a.boundingClientRect.top ?? 0) - (b.boundingClientRect.top ?? 0));
+
+        if (visible.length > 0) {
+          const id = (visible[0].target as HTMLElement).id;
+          if (id) setActiveId(id);
+          return;
+        }
+
+        // fallback กันเคสเลื่อนเร็วมาก
+        const y = window.scrollY;
+        let best = sections[0];
+        let bestDist = Number.POSITIVE_INFINITY;
+        for (const el of sections) {
+          const top = el.getBoundingClientRect().top + window.scrollY;
+          const dist = Math.abs(top - y - 120);
+          if (dist < bestDist) {
+            bestDist = dist;
+            best = el;
+          }
+        }
+        if (best?.id) setActiveId(best.id);
+      },
+      {
+        // ทำให้ active ตอน section มาอยู่โซนบน
+        root: null,
+        rootMargin: "-18% 0px -70% 0px",
+        threshold: [0.08, 0.16, 0.24, 0.32],
+      }
+    );
+
+    sections.forEach((s) => io.observe(s));
     return () => io.disconnect();
   }, []);
 
@@ -69,7 +112,11 @@ export default function GuidePage() {
         </div>
 
         <div className={styles.searchWrap}>
-          <input className={styles.search} placeholder="Search in guide… (coming soon)" disabled />
+          <input
+            className={styles.search}
+            placeholder="Search in guide… (coming soon)"
+            disabled
+          />
         </div>
       </div>
 
@@ -81,11 +128,19 @@ export default function GuidePage() {
             <div className={styles.tocTitle}>Contents</div>
 
             <nav className={styles.tocNav}>
-              {toc.map((it) => (
-                <a key={it.id} className={styles.tocLink} href={`#${it.id}`}>
-                  {it.label}
-                </a>
-              ))}
+              {toc.map((it) => {
+                const active = activeId === it.id;
+                return (
+                  <a
+                    key={it.id}
+                    className={`${styles.tocLink} ${active ? styles.tocLinkActive : ""}`}
+                    href={`#${it.id}`}
+                    aria-current={active ? "true" : undefined}
+                  >
+                    {it.label}
+                  </a>
+                );
+              })}
             </nav>
 
             <div className={styles.callout}>
@@ -129,7 +184,6 @@ export default function GuidePage() {
             ]}
             delayMs={80}
           >
-            {/* optional: small highlight cards */}
             <div className={styles.cards3}>
               <InfoCard title="Upload" desc="Upload a panoramic X-ray to start a new case." />
               <InfoCard title="Predict" desc="Run the model to generate masks and FDI labels." />
@@ -286,10 +340,7 @@ export default function GuidePage() {
               "Select a previous case to review.",
               "Re-download exports if needed.",
             ]}
-            outputs={[
-              "Case list and metadata.",
-              "Access to previously exported artifacts.",
-            ]}
+            outputs={["Case list and metadata.", "Access to previously exported artifacts."]}
             troubleshooting={[
               "If history is empty, ensure you are logged in with the correct account.",
               "If a case fails to load, the record may be incomplete.",
@@ -313,10 +364,7 @@ export default function GuidePage() {
               "Edit your display name if needed.",
               "Use quick actions for password reset.",
             ]}
-            outputs={[
-              "Updated display name (if saved successfully).",
-              "Password reset navigation.",
-            ]}
+            outputs={["Updated display name (if saved successfully).", "Password reset navigation."]}
             troubleshooting={[
               "If saving fails, check your connection and try again.",
               "If session expires, log in again.",
@@ -333,6 +381,7 @@ export default function GuidePage() {
             id="faq"
             className={`${styles.section} ${styles.block}`}
             data-reveal
+            data-spy
             style={{ ["--d" as any]: "320ms" }}
           >
             <div className={styles.blockTop}>
@@ -421,6 +470,7 @@ function ProtocolSection(props: {
       id={props.id}
       className={`${styles.section} ${styles.block}`}
       data-reveal
+      data-spy
       style={{ ["--d" as any]: `${d}ms` }}
     >
       <div className={styles.blockTop}>
@@ -441,7 +491,6 @@ function ProtocolSection(props: {
         </div>
       </div>
 
-      {/* optional highlight area */}
       {props.children ? <div className={styles.blockExtra}>{props.children}</div> : null}
 
       <div className={styles.protoGrid}>
