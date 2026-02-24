@@ -7,6 +7,8 @@ import { auth } from "@/lib/auth";
 import styles from "./login.module.css";
 import StudentIDCard from "./StudentIDCard";
 
+const EXIT_MS = 620; // ✅ ต้องตรงกับ CSS duration ของ exit animation
+
 export default function LoginPage() {
   const router = useRouter();
 
@@ -16,6 +18,20 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  // ✅ รวม logic ออกหน้าเดียวกัน (ใช้กับ home / forgot-password / อื่นๆ)
+  function goWithExit(path: string, afterLoginShellIntro?: boolean) {
+    if (loading || leaving) return;
+
+    setLeaving(true);
+
+    window.setTimeout(() => {
+      if (afterLoginShellIntro) {
+        sessionStorage.setItem("after_login_shell_intro", "1");
+      }
+      router.push(path);
+    }, EXIT_MS);
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,14 +52,8 @@ export default function LoginPage() {
       const r = await api.login(e1, p1);
       auth.set(r.accessToken);
 
-      // ✅ play exit animation ONLY when login success
-      setLeaving(true);
-
-      // must match CSS duration (e.g., 620ms)
-      window.setTimeout(() => {
-        sessionStorage.setItem("after_login_shell_intro", "1");
-        router.push("/home");
-      }, 620);
+      // ✅ เล่น exit animation แล้วค่อยไป /home
+      goWithExit("/home", true);
     } catch (ex: any) {
       setErr(ex?.message || "Login failed: Invalid email or password.");
       setLoading(false);
@@ -79,9 +89,7 @@ export default function LoginPage() {
             <div className={styles.featureGrid}>
               <div className={styles.feature}>
                 <p className={styles.featureTitle}>Clear overlays</p>
-                <p className={styles.featureText}>
-                  Masks + contours with readable FDI labels.
-                </p>
+                <p className={styles.featureText}>Masks + contours with readable FDI labels.</p>
               </div>
               <div className={styles.feature}>
                 <p className={styles.featureTitle}>Structured output</p>
@@ -97,9 +105,7 @@ export default function LoginPage() {
               </div>
               <div className={styles.feature}>
                 <p className={styles.featureTitle}>History per user</p>
-                <p className={styles.featureText}>
-                  Keep cases organized under your account.
-                </p>
+                <p className={styles.featureText}>Keep cases organized under your account.</p>
               </div>
             </div>
 
@@ -121,7 +127,7 @@ export default function LoginPage() {
               className={`${styles.rightTopLogo} ${leaving ? styles.rightLogoExit : ""}`}
             />
 
-            {/* ✅ IMPORTANT: use the same fixed frame as Register (same width/height/radius) */}
+            {/* fixed frame */}
             <div className={`${styles.cardFrame} ${leaving ? styles.cardExit : ""}`}>
               <StudentIDCard
                 email={email}
@@ -132,7 +138,9 @@ export default function LoginPage() {
                 onEmailChange={setEmail}
                 onPasswordChange={setPassword}
                 onSubmit={onSubmit}
-                onForgot={() => router.push("/forgot-password")}
+                // ✅ Forgot: เล่น exit animation ก่อน
+                onForgot={() => goWithExit("/forgot-password")}
+                // (ถ้าอยากให้ Register ก็ exit ก่อน: onRegister={() => goWithExit("/register")}
                 onRegister={() => router.push("/register")}
               />
             </div>

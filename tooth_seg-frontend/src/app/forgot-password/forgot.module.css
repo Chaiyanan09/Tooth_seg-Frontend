@@ -1,152 +1,496 @@
+/* src/app/forgot-password/forgot.module.css */
+
+/* =========================================================
+   Forgot Password - "Patient File" Center Layout (CSS-only)
+   Match Login Theme Tokens
+   ========================================================= */
+
 .page {
-  position: fixed;   /* ✅ ล็อกหน้าไว้ */
+  /* tokens (ยึดแนวเดียวกับ login.module.css) */
+  --c-red: 229, 57, 53;
+  --c-green: 46, 125, 50;
+
+  --bg-page: linear-gradient(135deg, #fff6f6 0%, #f3fff6 100%);
+  --glass-1: rgba(255, 255, 255, 0.55);
+  --glass-2: rgba(255, 255, 255, 0.60);
+  --glass-3: rgba(255, 255, 255, 0.65);
+  --glass-card: rgba(255, 255, 255, 0.86);
+
+  --b-soft: 1px solid rgba(0, 0, 0, 0.08);
+  --b-input: 1px solid rgba(0, 0, 0, 0.14);
+
+  --r-pill: 999px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-card: 22px;
+
+  --shadow-card: 0 20px 56px rgba(0, 0, 0, 0.12);
+  --shadow-strong: 0 28px 72px rgba(0, 0, 0, 0.18);
+
+  --blur: blur(10px);
+  --ease: cubic-bezier(.2,.8,.2,1);
+  --t-fast: 160ms;
+  --t-med: 220ms;
+
+  position: fixed;
   inset: 0;
-  overflow: hidden;  /* ✅ กันเลื่อน */
+  overflow: hidden;
+  background: var(--bg-page);
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
+.page *, .page *::before, .page *::after {
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   Stage (center)
+   ========================================================= */
+
+.stage {
+  height: 100%;
+  width: 100%;
   display: grid;
   place-items: center;
-  padding: 24px;
-  box-sizing: border-box;
-  background: linear-gradient(135deg, #fff6f6 0%, #f3fff6 100%);
+  padding: 26px;
 }
 
-.decor1, .decor2, .decor3 {
+/* =========================================================
+   Background blobs + slow drift
+   ========================================================= */
+
+.blob1, .blob2, .blob3 {
   position: absolute;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   pointer-events: none;
   opacity: 0.55;
+  filter: saturate(1.02);
 }
 
-.decor1 {
-  width: 520px;
-  height: 520px;
-  right: -220px;
-  top: -220px;
-  background: radial-gradient(circle at 30% 30%, rgba(229,57,53,0.70), rgba(229,57,53,0));
+.blob1 {
+  width: 620px;
+  height: 620px;
+  right: -240px;
+  top: -260px;
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(var(--c-red), 0.72),
+    rgba(var(--c-red), 0)
+  );
+  animation: drift1 26s var(--ease) infinite alternate;
 }
 
-.decor2 {
-  width: 560px;
-  height: 560px;
-  left: -260px;
-  bottom: -260px;
-  background: radial-gradient(circle at 30% 30%, rgba(46,125,50,0.65), rgba(46,125,50,0));
+.blob2 {
+  width: 720px;
+  height: 720px;
+  left: -320px;
+  bottom: -360px;
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(var(--c-green), 0.68),
+    rgba(var(--c-green), 0)
+  );
+  animation: drift2 30s var(--ease) infinite alternate;
 }
 
-.decor3 {
-  width: 260px;
-  height: 260px;
-  left: 42%;
-  top: 10%;
-  opacity: 0.35;
-  background: radial-gradient(circle at 40% 40%, rgba(255,255,255,0.85), rgba(255,255,255,0));
+.blob3 {
+  width: 320px;
+  height: 320px;
+  left: 46%;
+  top: 12%;
+  opacity: 0.32;
+  background: radial-gradient(
+    circle at 40% 40%,
+    rgba(255, 255, 255, 0.85),
+    rgba(255, 255, 255, 0)
+  );
+  animation: drift3 22s var(--ease) infinite alternate;
 }
 
-.card {
-  width: min(560px, 100%);
-  background: rgba(255,255,255,0.86);
-  border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 22px;
-  padding: 28px 26px;
-  box-shadow: 0 20px 56px rgba(0,0,0,0.12);
-  backdrop-filter: blur(10px);
+@keyframes drift1 {
+  from { transform: translate3d(0,0,0) scale(1); }
+  to   { transform: translate3d(-18px, 22px, 0) scale(1.02); }
 }
+@keyframes drift2 {
+  from { transform: translate3d(0,0,0) scale(1); }
+  to   { transform: translate3d(26px, -18px, 0) scale(1.03); }
+}
+@keyframes drift3 {
+  from { transform: translate3d(0,0,0) scale(1); }
+  to   { transform: translate3d(-14px, 10px, 0) scale(1.02); }
+}
+
+/* =========================================================
+   File (folder) block
+   ========================================================= */
+
+.file {
+  width: min(980px, 94vw);
+  position: relative;
+  display: grid;
+  gap: 12px;
+  animation: enter 520ms var(--ease) both;
+}
+
+@keyframes enter {
+  from { opacity: 0; transform: translate3d(0, 14px, 0) scale(0.992); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+/* folder tab */
+.tab {
+  position: absolute;
+  left: 22px;
+  top: -14px;
+  height: 34px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 14px 14px 10px 10px;
+  background: rgba(255,255,255,0.88);
+  border: var(--b-soft);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.10);
+  backdrop-filter: var(--blur);
+  z-index: 3;
+}
+
+.tabText {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: rgba(0,0,0,0.62);
+}
+
+/* main file card */
+.fileCard {
+  position: relative;
+  border-radius: 26px;
+  background: var(--glass-card);
+  border: var(--b-soft);
+  box-shadow: var(--shadow-strong);
+  backdrop-filter: var(--blur);
+  overflow: hidden;
+}
+
+/* subtle paper grain */
+.fileCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(229,57,53,0.09), rgba(229,57,53,0) 44%),
+    radial-gradient(circle at 88% 76%, rgba(46,125,50,0.08), rgba(46,125,50,0) 46%),
+    linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.00));
+  pointer-events: none;
+}
+
+/* layout: spine + body */
+/* เดิม .body มีแค่ grid-template-columns */
+.body {
+  position: relative;
+  display: grid;
+  grid-template-columns: 84px 1fr;
+
+  /* ✅ เพิ่มแถว: header + content */
+  grid-template-rows: auto 1fr;
+
+  min-height: 520px;
+}
+
+/* ✅ ให้ spine กินทั้ง 2 แถว */
+.spine {
+  position: relative;
+  grid-column: 1;
+  grid-row: 1 / -1; /* กินตั้งแต่แถว 1 ถึงสุดท้าย */
+  background: linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.03));
+  border-right: 1px solid rgba(0,0,0,0.06);
+}
+
+.spineInner {
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.barcode {
+  width: 36px;
+  height: 78%;
+  border-radius: 10px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(0,0,0,0.18) 0px,
+      rgba(0,0,0,0.18) 2px,
+      rgba(0,0,0,0.02) 2px,
+      rgba(0,0,0,0.02) 6px
+    );
+  opacity: 0.55;
+  filter: blur(0.1px);
+}
+
+/* ✅ content อยู่คอลัมน์ขวา แถวล่าง */
+.content {
+  grid-column: 2;
+  grid-row: 2;
+
+  padding: 34px 34px 28px;
+  display: grid;
+  gap: 14px;
+}
+
+/* =========================================================
+   Header (clinic-like)
+   ========================================================= */
+
+/* ✅ บังคับ header อยู่คอลัมน์ขวา แถวบน */
+.header {
+  grid-column: 2;
+  grid-row: 1;
+
+  padding: 22px 34px;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.appPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 12px;
+  border-radius: var(--r-pill);
+  background: var(--glass-2);
+  border: var(--b-soft);
+  backdrop-filter: var(--blur);
+
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(0,0,0,0.72);
+}
+
+.headerMeta {
+  text-align: right;
+  display: grid;
+  gap: 2px;
+}
+
+.metaTitle {
+  font-size: 12.5px;
+  font-weight: 900;
+  color: rgba(0,0,0,0.74);
+}
+
+.metaSub {
+  font-size: 12px;
+  color: rgba(0,0,0,0.52);
+}
+
+/* =========================================================
+   Typography
+   ========================================================= */
 
 .title {
-  margin: 0 0 6px;
-  font-size: 28px;
-  letter-spacing: -0.4px;
+  margin: 0;
+  font-size: 34px;
+  letter-spacing: -0.6px;
 }
 
 .sub {
-  margin: 0 0 18px;
+  margin: 0;
+  max-width: 68ch;
   color: rgba(0,0,0,0.58);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.6;
 }
+
+/* =========================================================
+   Form section
+   ========================================================= */
 
 .form {
   display: grid;
-  gap: 12px;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.formSection {
+  padding: 14px 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.55);
+  border: var(--b-soft);
+}
+
+.sectionTitle {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(0,0,0,0.56);
+  margin: 0 0 10px;
 }
 
 .label {
   display: grid;
-  gap: 6px;
+  gap: 7px;
   font-size: 13px;
-  color: rgba(0,0,0,0.75);
+  font-weight: 700;
+  color: rgba(0,0,0,0.70);
 }
 
 .input {
   padding: 12px 12px;
   border-radius: 12px;
-  border: 1px solid rgba(0,0,0,0.14);
+  border: var(--b-input);
   outline: none;
   background: rgba(255,255,255,0.92);
+  transition: box-shadow var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
 }
 
 .input:focus {
-  border-color: rgba(46,125,50,0.35);
-  box-shadow: 0 0 0 4px rgba(46,125,50,0.10);
+  border-color: rgba(var(--c-green), 0.34);
+  box-shadow: 0 0 0 4px rgba(var(--c-green), 0.10);
+  transform: translateY(-1px);
 }
 
-.row {
+/* =========================================================
+   Actions (buttons)
+   ========================================================= */
+
+.actions {
   display: flex;
-  gap: 10px;
-  margin-top: 6px;
+  gap: 12px;
   flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.primary, .secondary {
+  flex: 1;
+  min-width: 220px;
+  padding: 12px 12px;
+  border-radius: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease), opacity var(--t-fast) var(--ease);
 }
 
 .primary {
-  flex: 1;
-  min-width: 180px;
-  padding: 12px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(229,57,53,0.55);
-  background: rgba(229,57,53,0.92);
+  border: 1px solid rgba(var(--c-red), 0.55);
+  background: rgba(var(--c-red), 0.92);
   color: #fff;
-  font-weight: 900;
-  cursor: pointer;
+  box-shadow: 0 14px 34px rgba(229,57,53,0.18);
 }
+
+.primary:hover { transform: translateY(-1px); }
+.primary:active { transform: translateY(0px) scale(0.99); }
 
 .primary:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+  transform: none;
 }
 
 .secondary {
-  flex: 1;
-  min-width: 180px;
-  padding: 12px 12px;
-  border-radius: 12px;
   border: 1px solid rgba(0,0,0,0.12);
   background: #fff;
   color: rgba(0,0,0,0.82);
-  font-weight: 900;
-  cursor: pointer;
 }
 
+.secondary:hover { transform: translateY(-1px); }
+.secondary:active { transform: translateY(0px) scale(0.99); }
+
+/* =========================================================
+   Messages
+   ========================================================= */
+
 .msg {
-  margin-top: 12px;
+  margin-top: 10px;
   padding: 10px 12px;
   border-radius: 12px;
-  background: rgba(46,125,50,0.08);
-  border: 1px solid rgba(46,125,50,0.18);
+  background: rgba(var(--c-green), 0.08);
+  border: 1px solid rgba(var(--c-green), 0.18);
   color: rgba(0,0,0,0.85);
   font-size: 13px;
 }
 
 .err {
-  margin-top: 12px;
+  margin-top: 10px;
   padding: 10px 12px;
   border-radius: 12px;
-  background: rgba(229,57,53,0.10);
-  border: 1px solid rgba(229,57,53,0.20);
+  background: rgba(var(--c-red), 0.10);
+  border: 1px solid rgba(var(--c-red), 0.20);
   color: rgba(120,0,0,0.92);
   font-size: 13px;
 }
 
+/* =========================================================
+   Hint + Footer note
+   ========================================================= */
+
 .hint {
-  margin-top: 14px;
-  color: rgba(0,0,0,0.50);
+  margin-top: 2px;
+  color: rgba(0,0,0,0.48);
   font-size: 12px;
+}
+
+.footerNote {
+  text-align: center;
+  font-size: 12px;
+  color: rgba(0,0,0,0.42);
+}
+
+/* =========================================================
+   Responsive
+   ========================================================= */
+
+@media (max-width: 820px) {
+  .body {
+    grid-template-columns: 64px 1fr;
+  }
+  .header, .content {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .title {
+    font-size: 30px;
+  }
+  .primary, .secondary {
+    min-width: 180px;
+  }
+}
+
+/* =========================================================
+   Reduced motion
+   ========================================================= */
+@media (prefers-reduced-motion: reduce) {
+  .file { animation: none; }
+  .blob1, .blob2, .blob3 { animation: none; }
+  .input, .primary, .secondary { transition: none; }
+}
+
+/* ===== Exit animation (reverse of enter) ===== */
+.exit {
+  animation: exit 320ms var(--ease) both;
+}
+
+@keyframes exit {
+  from { opacity: 1; transform: translate3d(0,0,0) scale(1); }
+  to   { opacity: 0; transform: translate3d(0,14px,0) scale(0.992); }
+}
+
+/* ให้ background blob ลด opacity ตอนออก (optional แต่สวย) */
+.exit ~ .blob1,
+.exit ~ .blob2,
+.exit ~ .blob3 {
+  opacity: 0.0;
+  transition: opacity 260ms var(--ease);
+}
+.pageExit .file { animation: exit 320ms var(--ease) both; }
+.pageExit .blob1,
+.pageExit .blob2,
+.pageExit .blob3 {
+  opacity: 0.0;
+  transition: opacity 260ms var(--ease);
 }
