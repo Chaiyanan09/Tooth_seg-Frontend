@@ -415,7 +415,13 @@ const [loading, setLoading] = useState(true);
     if (!bytes) return;
 
     const fileName = replaceExt(it.path || id || "predict", "_predict.png");
-    await downloadBlob(new Blob([bytes], { type: "image/png" }), fileName);
+    function u8ToArrayBuffer(u8: Uint8Array): ArrayBuffer {
+      const ab = new ArrayBuffer(u8.byteLength);
+      new Uint8Array(ab).set(u8);
+      return ab;
+    }
+
+    await downloadBlob(new Blob([u8ToArrayBuffer(bytes)], { type: "image/png" }), fileName);
   };
 
   const downloadJson = async (it: HistoryItem) => {
