@@ -341,6 +341,7 @@ const [loading, setLoading] = useState(true);
 
   // cache for fresh signed urls / raw json
   const [detailMap, setDetailMap] = useState<Record<string, PredictResponse>>({});
+  const requestedRef = useRef<Set<string>>(new Set());
 
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerTitle, setViewerTitle] = useState("");
@@ -353,6 +354,8 @@ const [loading, setLoading] = useState(true);
     async function load() {
       setLoading(true);
       setError(null);
+      setDetailMap({});
+      requestedRef.current.clear();
 
       try {
         const list = (await api.history()) as HistoryItem[];
@@ -375,9 +378,9 @@ const [loading, setLoading] = useState(true);
     };
   }, [dayKey]);
 
-  async function ensureDetail(id: string): Promise<PredictResponse | null> {
+  async function ensureDetail(id: string, force = false): Promise<PredictResponse | null> {
     if (!id) return null;
-    if (detailMap[id]) return detailMap[id];
+    if (!force && detailMap[id]) return detailMap[id];
 
     try {
       const d = await api.historyOne(id);
@@ -388,6 +391,48 @@ const [loading, setLoading] = useState(true);
     }
   }
 
+
+  // Prefetch signed preview URLs (Method A): if history list doesn't contain overlayUrl,
+  // we fetch /api/history/{id} for those items in background and cache it in detailMap.
+  useEffect(() => {
+    let cancelled = false;
+
+    const need = items
+      .map((it) => ({ it, id: getId(it) }))
+      .filter(({ it, id }) => !!id && !getOverlaySrc(it) && !requestedRef.current.has(id));
+
+    if (!need.length) return;
+
+    const concurrency = 4;
+    let cursor = 0;
+
+    async function worker() {
+      while (!cancelled) {
+        const cur = need[cursor++];
+        if (!cur) break;
+
+        const id = cur.id;
+        if (!id) continue;
+
+        requestedRef.current.add(id);
+
+        try {
+          const d = await api.historyOne(id);
+          if (cancelled) return;
+          setDetailMap((prev) => ({ ...prev, [id]: d }));
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    const runners = Array.from({ length: Math.min(concurrency, need.length) }, () => worker());
+    Promise.all(runners).catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [items]);
+
   const count = items.length;
   const missingSum = useMemo(() => items.reduce((a, b) => a + getMissingFdi(b).length, 0), [items]);
 
@@ -395,7 +440,7 @@ const [loading, setLoading] = useState(true);
     const id = getId(it);
 
     // try refresh signed url for best UX (cloudinary signed URL may expire)
-    const d = id ? await ensureDetail(id) : null;
+    const d = id ? await ensureDetail(id, true) : null;
     const overlaySrc = getOverlaySrc(d) || getOverlaySrc(it);
 
     if (!overlaySrc) return;
@@ -408,7 +453,7 @@ const [loading, setLoading] = useState(true);
 
   const downloadPredictPng = async (it: HistoryItem) => {
     const id = getId(it);
-    const d = id ? await ensureDetail(id) : null;
+    const d = id ? await ensureDetail(id, true) : null;
     const merged = d ? { ...it, ...d } : it;
 
     const bytes = await getOverlayBytes(merged);
@@ -557,6 +602,10 @@ const [loading, setLoading] = useState(true);
                       alt="overlay"
                       className={`${styles.img} ${styles.imgBtn}`}
                       onClick={() => openViewer(it)}
+                      onError={() => {
+                        const id0 = getId(it);
+                        if (id0) void ensureDetail(id0, true);
+                      }}
                     />
                   ) : (
                     <div
