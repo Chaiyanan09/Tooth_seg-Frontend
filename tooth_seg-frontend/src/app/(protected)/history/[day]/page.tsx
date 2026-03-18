@@ -338,6 +338,7 @@ const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [items, setItems] = useState<HistoryItem[]>([]);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // cache for fresh signed urls / raw json
   const [detailMap, setDetailMap] = useState<Record<string, PredictResponse>>({});
@@ -388,6 +389,35 @@ const [loading, setLoading] = useState(true);
       return d;
     } catch {
       return null;
+    }
+  }
+
+  async function deleteHistoryItem(it: HistoryItem) {
+    const id = getId(it);
+    if (!id) return;
+
+    const ok = window.confirm(`Delete history "${it.path || id}" ?`);
+    if (!ok) return;
+
+    try {
+      setDeletingId(id);
+      await api.historyDelete(id);
+
+      setItems((prev) => prev.filter((x) => getId(x) !== id));
+
+      setDetailMap((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+
+      if (viewerOpen) {
+        setViewerOpen(false);
+      }
+    } catch (e: any) {
+      alert(e?.message ?? "Failed to delete history");
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -661,6 +691,19 @@ const [loading, setLoading] = useState(true);
 
                   <button className={styles.btn} onClick={() => downloadJson(it)}>
                     Download JSON
+                  </button>
+
+                  <button
+                    className={styles.btn}
+                    disabled={deletingId === id}
+                    onClick={() => deleteHistoryItem(it)}
+                    style={{
+                      border: "1px solid rgba(255, 90, 90, 0.35)",
+                      color: "#ffb4b4",
+                      background: "rgba(255, 90, 90, 0.08)",
+                    }}
+                  >
+                    {deletingId === id ? "Deleting..." : "Delete"}
                   </button>
                 </div>
               </article>

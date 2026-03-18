@@ -214,4 +214,7 @@ export const api = {
 
   historyOne: (id: string) =>
     request<PredictResponse>(`/api/history/${id}`, { method: "GET" }),
+
+  historyDelete: (id: string) =>
+    request<void>(`/api/history/${id}`, { method: "DELETE" }),
 };

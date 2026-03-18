@@ -590,3 +590,13 @@
   user-select: none;
   -webkit-user-drag: none;
 }
+
+.btnDanger {
+  border: 1px solid rgba(255, 90, 90, 0.35);
+  color: #ffb4b4;
+  background: rgba(255, 90, 90, 0.08);
+}
+
+.btnDanger:hover {
+  background: rgba(255, 90, 90, 0.16);
+}

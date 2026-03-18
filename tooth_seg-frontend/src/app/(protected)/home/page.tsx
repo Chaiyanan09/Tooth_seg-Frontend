@@ -57,7 +57,7 @@ export default function HomePage() {
           <div className={styles.miniGrid}>
             <div className={styles.miniCard}>
               <div className={styles.miniTitle}>Models</div>
-              <div className={styles.miniValue}>Mask R-CNN / Mask2Former</div>
+              <div className={styles.miniValue}>HTC + Swin T + FPN</div>
               <div className={styles.miniHint}>Compare & benchmark</div>
             </div>
 

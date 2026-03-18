@@ -261,13 +261,6 @@ export default function HistoryPage() {
           })}
         </section>
       )}
-
-      {/* tiny hint for debugging */}
-      {!loading && !error && totalImages === 0 && (
-        <div className={styles.hint}>
-          If nothing shows up: check <b>NEXT_PUBLIC_API_BASE</b> points to your backend and you are logged in (token present).
-        </div>
-      )}
     </div>
   );
 }

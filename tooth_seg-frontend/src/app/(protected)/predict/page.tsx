@@ -511,7 +511,7 @@ export default function ToothInSegPage() {
         <div className={styles.heroTop}>
           <div>
             <div className={styles.kicker}>Instance Segmentation</div>
-            <h1 className={styles.title}>ToothInSeg</h1>
+            <h1 className={styles.title}>Predict</h1>
             <p className={styles.subtitle}>
               Select images/folder → Predict → Click the prediction to zoom → Download PNG/JSON or a combined ZIP
             </p>

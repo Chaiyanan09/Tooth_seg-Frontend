@@ -26,7 +26,7 @@ type NavItem = { label: string; href: string };
 const NAV: NavItem[] = [
   { label: "Home", href: "/home" },
   { label: "Guide", href: "/guide" },
-  { label: "ToothInSeg", href: "/toothinseg" },
+  { label: "Predict", href: "/predict" },
   { label: "History", href: "/history" },
   { label: "Profile", href: "/profile" },
 ];
