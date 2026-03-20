@@ -1,19 +1,13 @@
-/* =========================
-   ToothInSeg — match Home theme
-   ========================= */
-
-/* ใช้ palette เดียวกับหน้า Home */
 :root {
   --red: #e11d48;
   --red-weak: rgba(225, 29, 72, 0.12);
   --green: #0f766e;
   --green-weak: rgba(15, 118, 110, 0.14);
-
   --ink: #0f172a;
   --muted: #475569;
   --line: rgba(0, 0, 0, 0.08);
   --card: #ffffff;
-  --shadow: 0 16px 36px rgba(0, 0, 0, 0.08);
+  --shadow: 0 14px 32px rgba(0, 0, 0, 0.08);
 }
 
 .page {
@@ -23,103 +17,35 @@
   color: var(--ink);
 }
 
-/* =========================
-   Shared interaction (shine + lift) แบบ Home
-   ========================= */
 .hero,
 .dropzone,
 .card,
 .emptyCard {
   position: relative;
   overflow: hidden;
-  isolation: isolate;
   transition:
-    transform 240ms cubic-bezier(.22, 1, .36, 1),
-    box-shadow 240ms cubic-bezier(.22, 1, .36, 1),
-    border-color 240ms cubic-bezier(.22, 1, .36, 1),
-    filter 240ms cubic-bezier(.22, 1, .36, 1);
-  will-change: transform;
-}
-
-.hero::after,
-.dropzone::after,
-.card::after,
-.emptyCard::after {
-  content: "";
-  position: absolute;
-  inset: -60%;
-  pointer-events: none;
-  opacity: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.30) 42%,
-    rgba(255, 255, 255, 0.08) 52%,
-    transparent 100%
-  );
-  transform: translateX(-60%) rotate(18deg);
-  transition: opacity 160ms ease;
-  z-index: 2;
-  mix-blend-mode: soft-light;
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
 }
 
 .hero:hover,
 .dropzone:hover,
 .card:hover,
 .emptyCard:hover {
-  transform: translateY(-3px) scale(1.01);
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.12);
-  filter: saturate(1.03);
-}
-
-.hero:hover::after,
-.dropzone:hover::after,
-.card:hover::after,
-.emptyCard:hover::after {
-  opacity: 1;
-  animation: homeShine 720ms cubic-bezier(.22, 1, .36, 1);
-}
-
-@keyframes homeShine {
-  from { transform: translateX(-70%) rotate(18deg); }
-  to   { transform: translateX(70%) rotate(18deg); }
-}
-
-.hero:focus-within,
-.dropzone:focus-within,
-.card:focus-within,
-.emptyCard:focus-within {
   transform: translateY(-2px);
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.1);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .hero,
-  .dropzone,
-  .card,
-  .emptyCard,
-  .hero::after,
-  .dropzone::after,
-  .card::after,
-  .emptyCard::after {
-    transition: none !important;
-    animation: none !important;
-  }
-}
-
-/* =========================
-   HERO (เหมือนหน้า Home)
-   ========================= */
 .hero {
   border-radius: 20px;
   border: 1px solid var(--line);
   background:
     radial-gradient(900px 260px at 20% 0%, var(--red-weak), transparent 55%),
     radial-gradient(900px 260px at 80% 0%, var(--green-weak), transparent 55%),
-    linear-gradient(135deg, rgba(255,255,255,0.88), rgba(255,255,255,0.72));
+    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.78));
   box-shadow: var(--shadow);
   padding: 22px;
-  overflow: hidden;
 }
 
 .heroTop {
@@ -137,15 +63,14 @@
   padding: 8px 12px;
   border-radius: 999px;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.8);
   font-weight: 900;
   color: #334155;
   font-size: 12px;
-  width: fit-content;
 }
 
 .title {
-  margin: 12px 0 0 0;
+  margin: 12px 0 0;
   font-size: 34px;
   font-weight: 950;
   letter-spacing: -0.02em;
@@ -153,11 +78,11 @@
 }
 
 .subtitle {
-  margin: 10px 0 0 0;
+  margin: 10px 0 0;
   color: var(--muted);
-  line-height: 1.75;
+  line-height: 1.7;
   font-weight: 600;
-  max-width: 70ch;
+  max-width: 62ch;
 }
 
 .heroActions {
@@ -167,7 +92,6 @@
   align-items: center;
 }
 
-/* stats ให้เป็นการ์ดย่อยแบบ miniCard */
 .stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -182,36 +106,19 @@
 }
 
 .stat {
-  border-radius: 18px;
+  border-radius: 16px;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 10px 22px rgba(0,0,0,0.06);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.05);
   padding: 12px 14px;
-  position: relative;
-  overflow: hidden;
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: 10px;
 }
 
-.stat::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(420px 120px at 20% 0%, var(--red-weak), transparent 58%),
-    radial-gradient(420px 120px at 80% 0%, var(--green-weak), transparent 58%);
-  pointer-events: none;
-}
-
-.stat span,
-.stat b {
-  position: relative;
-}
-
 .stat span {
-  color: rgba(0,0,0,0.55);
+  color: rgba(0, 0, 0, 0.58);
   font-size: 12px;
   font-weight: 900;
 }
@@ -236,12 +143,9 @@
   width: 0%;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--red), var(--green));
-  transition: width 240ms ease;
+  transition: width 220ms ease;
 }
 
-/* =========================
-   Toolbar / Dropzone
-   ========================= */
 .toolbar {
   margin-top: 16px;
 }
@@ -253,9 +157,9 @@
 .dropzone {
   border-radius: 18px;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 10px 22px rgba(0,0,0,0.06);
-  padding: 16px 16px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.05);
+  padding: 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -266,7 +170,7 @@
 
 .dropzoneActive {
   border-color: rgba(225, 29, 72, 0.35);
-  box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.12), 0 12px 26px rgba(0,0,0,0.08);
+  box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.1), 0 12px 26px rgba(0, 0, 0, 0.08);
 }
 
 .dropLeft {
@@ -282,17 +186,15 @@
   border-radius: 18px;
   display: grid;
   place-items: center;
-  font-weight: 950;
   color: #fff;
   background: linear-gradient(135deg, var(--red), var(--green));
-  user-select: none;
   flex: 0 0 auto;
 }
 
 .dropTitle {
   font-weight: 950;
   color: var(--ink);
-  margin-bottom: 2px;
+  margin-bottom: 3px;
 }
 
 .dropHint {
@@ -325,29 +227,27 @@
   font-weight: 950;
 }
 
-/* =========================
-   Buttons (pill style แบบ Home)
-   ========================= */
 .btn {
   height: 38px;
   padding: 0 14px;
   border-radius: 999px;
-  border: 1px solid rgba(0,0,0,0.10);
-  background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.88);
   color: #334155;
   font-weight: 950;
   font-size: 12px;
   cursor: pointer;
-  transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease;
+  transition: transform 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
 }
 
-.btn:hover:not(:disabled) {
+.btn:hover:not(:disabled),
+.iconBtn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgba(0,0,0,0.10);
-  filter: saturate(1.03);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
 }
 
-.btn:disabled {
+.btn:disabled,
+.iconBtn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
   transform: none;
@@ -355,7 +255,6 @@
 }
 
 .btnPrimary {
-  border-color: rgba(0,0,0,0.10);
   background: linear-gradient(135deg, var(--red), var(--green));
   color: #fff;
 }
@@ -370,21 +269,13 @@
   width: 36px;
   height: 36px;
   border-radius: 999px;
-  border: 1px solid rgba(0,0,0,0.10);
-  background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.88);
   color: #334155;
   font-weight: 950;
   cursor: pointer;
 }
 
-.iconBtn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-/* =========================
-   List / Card
-   ========================= */
 .list {
   margin-top: 14px;
   display: grid;
@@ -419,10 +310,11 @@
 }
 
 .cardMeta {
-  margin-top: 3px;
+  margin-top: 4px;
   font-size: 12px;
   color: var(--muted);
   font-weight: 700;
+  word-break: break-word;
 }
 
 .cardRight {
@@ -432,14 +324,13 @@
   flex: 0 0 auto;
 }
 
-/* badges แบบ pill */
 .badge {
   border-radius: 999px;
   padding: 8px 10px;
   font-weight: 950;
   font-size: 12px;
-  border: 1px solid rgba(0,0,0,0.10);
-  background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.88);
   color: #334155;
 }
 
@@ -453,8 +344,8 @@
 }
 
 .badgeRun {
-  border-color: rgba(245, 158, 11, 0.30);
-  background: rgba(245, 158, 11, 0.10);
+  border-color: rgba(245, 158, 11, 0.3);
+  background: rgba(245, 158, 11, 0.1);
 }
 
 .badgeDone {
@@ -467,29 +358,26 @@
   background: rgba(225, 29, 72, 0.08);
 }
 
-.errorBox {
-  margin-top: 10px;
-  padding: 10px 12px;
-  border-radius: 18px;
-  border: 1px solid rgba(225, 29, 72, 0.25);
-  background: rgba(225, 29, 72, 0.08);
-  color: #991b1b;
-  font-weight: 700;
-}
-
+.errorBox,
 .warnBox {
   margin-top: 10px;
   padding: 10px 12px;
-  border-radius: 18px;
-  border: 1px solid rgba(245, 158, 11, 0.30);
-  background: rgba(245, 158, 11, 0.10);
-  color: #92400e;
+  border-radius: 14px;
   font-weight: 700;
 }
 
-/* =========================
-   Preview grid
-   ========================= */
+.errorBox {
+  border: 1px solid rgba(225, 29, 72, 0.25);
+  background: rgba(225, 29, 72, 0.08);
+  color: #991b1b;
+}
+
+.warnBox {
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: rgba(245, 158, 11, 0.1);
+  color: #92400e;
+}
+
 .previewGrid {
   margin-top: 12px;
   display: grid;
@@ -514,7 +402,7 @@
 }
 
 .imgWrap {
-  border: 1px solid rgba(0,0,0,0.10);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 16px;
   overflow: hidden;
   background: rgba(0, 0, 0, 0.03);
@@ -537,7 +425,7 @@
 
 .loadingText {
   color: var(--muted);
-  padding: 10px 0 0;
+  padding-top: 10px;
   font-weight: 700;
 }
 
@@ -548,23 +436,20 @@
   margin-top: 10px;
 }
 
-/* =========================
-   Missing / Present summary
-   ========================= */
 .teethSummary {
   margin-top: 10px;
   border-radius: 16px;
-  border: 1px solid rgba(0,0,0,0.08);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   background:
-    radial-gradient(420px 120px at 10% 0%, rgba(225, 29, 72, 0.10), transparent 60%),
-    radial-gradient(420px 120px at 90% 0%, rgba(15, 118, 110, 0.10), transparent 60%),
-    rgba(255, 255, 255, 0.75);
+    radial-gradient(420px 120px at 10% 0%, rgba(225, 29, 72, 0.08), transparent 60%),
+    radial-gradient(420px 120px at 90% 0%, rgba(15, 118, 110, 0.08), transparent 60%),
+    rgba(255, 255, 255, 0.76);
   padding: 10px 12px;
 }
 
 .teethRow {
   display: grid;
-  grid-template-columns: 92px 1fr;
+  grid-template-columns: 102px 1fr;
   gap: 10px;
   align-items: start;
 }
@@ -572,14 +457,13 @@
 .teethRow + .teethRow {
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px dashed rgba(0,0,0,0.10);
+  border-top: 1px dashed rgba(0, 0, 0, 0.1);
 }
 
 .teethKey {
   font-weight: 950;
   color: var(--ink);
   font-size: 12px;
-  opacity: 0.92;
 }
 
 .teethVal {
@@ -600,14 +484,14 @@
   border-radius: 999px;
   font-weight: 950;
   font-size: 12px;
-  border: 1px solid rgba(0,0,0,0.10);
-  background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.88);
   color: #334155;
 }
 
 .pillMissing {
   border-color: rgba(225, 29, 72, 0.28);
-  background: rgba(225, 29, 72, 0.10);
+  background: rgba(225, 29, 72, 0.1);
   color: #991b1b;
 }
 
@@ -621,9 +505,6 @@
   color: rgba(51, 65, 85, 0.92);
 }
 
-/* =========================
-   Empty state
-   ========================= */
 .empty {
   margin-top: 14px;
   display: grid;
@@ -652,9 +533,6 @@
   font-weight: 700;
 }
 
-/* =========================
-   Modal (คงเป็น dark viewer แต่ปรับให้สะอาด)
-   ========================= */
 .modalOverlay {
   position: fixed;
   inset: 0;
@@ -721,7 +599,7 @@
   flex: 1;
   position: relative;
   overflow: hidden;
-  touch-action: none; /* เพื่อให้ลาก/ซูมลื่น */
+  touch-action: none;
 }
 
 .modalImg {
@@ -732,4 +610,53 @@
   transform-origin: center center;
   max-width: none;
   user-select: none;
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding: 16px;
+  }
+
+  .hero,
+  .dropzone,
+  .card,
+  .emptyCard {
+    border-radius: 16px;
+  }
+
+  .dropzone {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dropActions,
+  .heroActions,
+  .cardActions {
+    width: 100%;
+  }
+
+  .btn,
+  .dropActions .btn,
+  .heroActions .btn,
+  .cardActions .btn {
+    flex: 1 1 140px;
+  }
+
+  .cardHead {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cardRight {
+    justify-content: space-between;
+  }
+
+  .teethRow {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .img {
+    height: 260px;
+  }
 }

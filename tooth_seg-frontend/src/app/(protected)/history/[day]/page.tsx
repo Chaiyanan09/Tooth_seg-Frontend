@@ -699,7 +699,7 @@ const [loading, setLoading] = useState(true);
                     onClick={() => deleteHistoryItem(it)}
                     style={{
                       border: "1px solid rgba(255, 90, 90, 0.35)",
-                      color: "#ffb4b4",
+                      color: "#ff0000",
                       background: "rgba(255, 90, 90, 0.08)",
                     }}
                   >

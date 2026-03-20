@@ -116,11 +116,6 @@ export default function HomePage() {
 
           <div className={styles.featureMedia}>
             <img className={styles.featureImg} src="/assets/pano.png" alt="Panoramic X-ray segmentation" />
-            <div className={styles.featureFooter}>
-              <span className={styles.pillRed}>Red: Instance boundary</span>
-              <span className={styles.pillGreen}>Green: Tooth labeling</span>
-              <span className={styles.pillNeutral}>Export-ready results</span>
-            </div>
           </div>
         </div>
       </section>

@@ -11,46 +11,45 @@ type Status = "IDLE" | "QUEUED" | "RUNNING" | "DONE" | "FAILED";
 type Item = {
   key: string;
   file: File;
-  path: string; // webkitRelativePath or filename
+  path: string;
   previewUrl: string;
-
   status: Status;
   result?: PredictResponse;
   error?: string;
 };
 
-function keyOf(f: File) {
-  return `${f.name}_${f.size}_${f.lastModified}`;
+function keyOf(file: File) {
+  return `${file.name}_${file.size}_${file.lastModified}`;
 }
 
 function niceSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
-function getRelPath(f: File) {
-  // @ts-ignore
-  const rel = (f as any).webkitRelativePath as string | undefined;
-  return rel && rel.length ? rel : f.name;
+function getRelPath(file: File) {
+  const maybeFile = file as File & { webkitRelativePath?: string };
+  return maybeFile.webkitRelativePath && maybeFile.webkitRelativePath.length
+    ? maybeFile.webkitRelativePath
+    : file.name;
 }
 
 function replaceExt(path: string, ext: string) {
   const i = path.lastIndexOf(".");
-  if (i < 0) return path + ext;
-  return path.slice(0, i) + ext;
+  if (i < 0) return `${path}${ext}`;
+  return `${path.slice(0, i)}${ext}`;
 }
 
-function safeZipRelPath(p: string) {
-  let s = (p || "").replace(/\\/g, "/");
-  s = s.replace(/^\/+/, "");
-  while (s.includes("..")) s = s.replace("..", "");
-  return s || "file.png";
+function safeZipRelPath(path: string) {
+  let value = (path || "").replace(/\\/g, "/");
+  value = value.replace(/^\/+/, "");
+  while (value.includes("..")) value = value.replace("..", "");
+  return value || "file.png";
 }
 
 function b64ToUint8Array(b64: string) {
   const bin = atob(b64);
-  const len = bin.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i += 1) bytes[i] = bin.charCodeAt(i);
   return bytes;
 }
 
@@ -62,52 +61,61 @@ function u8ToArrayBuffer(u8: Uint8Array): ArrayBuffer {
 
 async function downloadBlob(blob: Blob, filename: string) {
   const a = document.createElement("a");
-  const obj = URL.createObjectURL(blob);
-  a.href = obj;
+  const url = URL.createObjectURL(blob);
+  a.href = url;
   a.download = filename;
   document.body.appendChild(a);
   a.click();
   a.remove();
-  URL.revokeObjectURL(obj);
+  URL.revokeObjectURL(url);
 }
 
 function downloadText(text: string, filename: string) {
   const blob = new Blob([text], { type: "application/json" });
-  downloadBlob(blob, filename);
+  return downloadBlob(blob, filename);
 }
 
-/** ===== Overlay helpers (supports base64 and url) ===== */
-function getOverlayUrl(r?: any): string | null {
-  if (!r) return null;
-  return r.overlayUrl || r.overlay_url || null;
+function getOverlayUrl(result?: PredictResponse | null): string | null {
+  if (!result) return null;
+  return (result as PredictResponse & { overlay_url?: string }).overlayUrl ||
+    (result as PredictResponse & { overlay_url?: string }).overlay_url ||
+    null;
 }
 
-function getOverlayB64(r?: any): string | null {
-  if (!r) return null;
-  return r.overlayPngBase64 || r.overlay_png_base64 || null;
+function getOverlayB64(result?: PredictResponse | null): string | null {
+  if (!result) return null;
+  return (result as PredictResponse & { overlay_png_base64?: string }).overlayPngBase64 ||
+    (result as PredictResponse & { overlay_png_base64?: string }).overlay_png_base64 ||
+    null;
 }
 
-function getOverlaySrc(r?: any): string | null {
-  const url = getOverlayUrl(r);
+function getOverlaySrc(result?: PredictResponse | null): string | null {
+  const url = getOverlayUrl(result);
   if (url) return url;
-  const b64 = getOverlayB64(r);
+  const b64 = getOverlayB64(result);
   if (b64) return `data:image/png;base64,${b64}`;
   return null;
 }
 
-/** ===== Teeth helpers (supports camelCase and snake_case) ===== */
-function getPresentFdi(r?: any): string[] | null {
-  if (!r) return null;
-  return r.presentFdi || r.present_fdi || null;
+function getPresentFdi(result?: PredictResponse | null): string[] {
+  if (!result) return [];
+  return (
+    (result as PredictResponse & { presentFdi?: string[]; present_fdi?: string[] }).presentFdi ||
+    (result as PredictResponse & { presentFdi?: string[]; present_fdi?: string[] }).present_fdi ||
+    []
+  );
 }
 
-function getMissingFdi(r?: any): string[] | null {
-  if (!r) return null;
-  return r.missingFdi || r.missing_fdi || null;
+function getMissingFdi(result?: PredictResponse | null): string[] {
+  if (!result) return [];
+  return (
+    (result as PredictResponse & { missingFdi?: string[]; missing_fdi?: string[] }).missingFdi ||
+    (result as PredictResponse & { missingFdi?: string[]; missing_fdi?: string[] }).missing_fdi ||
+    []
+  );
 }
 
 function sortFdi(list: string[]) {
-  // FDI codes are like "11", "18", "48" (2 digits). Keep stable & numeric.
   return [...list].sort((a, b) => {
     const na = Number(a);
     const nb = Number(b);
@@ -116,28 +124,53 @@ function sortFdi(list: string[]) {
   });
 }
 
-async function getOverlayBytes(r?: any): Promise<Uint8Array | null> {
-  const b64 = getOverlayB64(r);
+async function getOverlayBytes(result?: PredictResponse | null): Promise<Uint8Array | null> {
+  const b64 = getOverlayB64(result);
   if (b64) return b64ToUint8Array(b64);
 
-  const url = getOverlayUrl(r);
-  if (url) {
-    const resp = await fetch(url);
-    const buf = await resp.arrayBuffer();
-    return new Uint8Array(buf);
-  }
-  return null;
+  const url = getOverlayUrl(result);
+  if (!url) return null;
+
+  const response = await fetch(url);
+  const buffer = await response.arrayBuffer();
+  return new Uint8Array(buffer);
 }
 
-function statusClass(s: Status) {
-  if (s === "DONE") return styles.badgeDone;
-  if (s === "FAILED") return styles.badgeFail;
-  if (s === "RUNNING") return styles.badgeRun;
-  if (s === "QUEUED") return styles.badgeQueue;
+function getInferenceMs(result?: PredictResponse | null) {
+  if (!result) return null;
+  const value = (result as PredictResponse & { inference_ms?: number }).inferenceMs ??
+    (result as PredictResponse & { inference_ms?: number }).inference_ms;
+  return typeof value === "number" ? value : null;
+}
+
+function statusClass(status: Status) {
+  if (status === "DONE") return styles.badgeDone;
+  if (status === "FAILED") return styles.badgeFail;
+  if (status === "RUNNING") return styles.badgeRun;
+  if (status === "QUEUED") return styles.badgeQueue;
   return styles.badgeIdle;
 }
 
-/** ===== Modal zoom/pan viewer (improved) ===== */
+function statusLabel(status: Status) {
+  if (status === "IDLE") return "Ready";
+  if (status === "QUEUED") return "Queued";
+  if (status === "RUNNING") return "Running";
+  if (status === "DONE") return "Completed";
+  return "Failed";
+}
+
+function buildJsonPayload(item: Item) {
+  return {
+    file: item.path,
+    id: item.result?.id,
+    createdAt: item.result?.createdAt,
+    inferenceMs: getInferenceMs(item.result),
+    presentFdi: getPresentFdi(item.result),
+    missingFdi: getMissingFdi(item.result),
+    instances: item.result?.instances ?? [],
+  };
+}
+
 function ViewerModal({
   open,
   onClose,
@@ -154,17 +187,15 @@ function ViewerModal({
   const [scale, setScale] = useState(1);
   const [tx, setTx] = useState(0);
   const [ty, setTy] = useState(0);
-
-  // Render via portal to avoid being trapped in any transformed/scrolling parent
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
 
   const panningRef = useRef(false);
-  const drag = useRef({ x: 0, y: 0, ox: 0, oy: 0 });
+  const dragRef = useRef({ x: 0, y: 0, ox: 0, oy: 0 });
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
 
-  // Prevent background scroll (works when page scroll is on <body>/<html>)
+  useEffect(() => setMounted(true), []);
+
   useEffect(() => {
     if (!open) return;
     const html = document.documentElement;
@@ -185,84 +216,74 @@ function ViewerModal({
     setTx(0);
     setTy(0);
 
-    // Focus a real control so the viewport doesn't jump on some layouts
     requestAnimationFrame(() => closeBtnRef.current?.focus());
 
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === "+" || e.key === "=") setScale((s) => Math.min(8, +(s + 0.25).toFixed(2)));
-      if (e.key === "-" || e.key === "_") setScale((s) => Math.max(0.2, +(s - 0.25).toFixed(2)));
-      if (e.key === "0") {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+      if (event.key === "+" || event.key === "=") {
+        setScale((current) => Math.min(8, +(current + 0.25).toFixed(2)));
+      }
+      if (event.key === "-" || event.key === "_") {
+        setScale((current) => Math.max(0.2, +(current - 0.25).toFixed(2)));
+      }
+      if (event.key === "0") {
         setScale(1);
         setTx(0);
         setTy(0);
       }
     };
+
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
   if (!open || !mounted) return null;
 
-  const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
+  const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
-  // Zoom towards cursor + prevent page scroll
-  const onWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const onWheel = (event: React.WheelEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
 
-    const rect = (canvasRef.current ?? e.currentTarget).getBoundingClientRect();
+    const rect = (canvasRef.current ?? event.currentTarget).getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
+    const vx = event.clientX - cx;
+    const vy = event.clientY - cy;
 
-    const vx = e.clientX - cx;
-    const vy = e.clientY - cy;
+    const nextScale = clamp(scale * (event.deltaY > 0 ? 0.9 : 1.1), 0.2, 8);
+    const ratio = nextScale / scale;
 
-    const nextScale = clamp(scale * (e.deltaY > 0 ? 0.9 : 1.1), 0.2, 8);
-    const k = nextScale / scale;
-
-    setTx(vx - (vx - tx) * k);
-    setTy(vy - (vy - ty) * k);
+    setTx(vx - (vx - tx) * ratio);
+    setTy(vy - (vy - ty) * ratio);
     setScale(+nextScale.toFixed(2));
   };
 
-  const onPointerDown = (e: React.PointerEvent) => {
-    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+  const onPointerDown = (event: React.PointerEvent) => {
+    (event.currentTarget as HTMLDivElement).setPointerCapture(event.pointerId);
     panningRef.current = true;
-    drag.current = { x: e.clientX, y: e.clientY, ox: tx, oy: ty };
+    dragRef.current = { x: event.clientX, y: event.clientY, ox: tx, oy: ty };
   };
 
-  const onPointerMove = (e: React.PointerEvent) => {
+  const onPointerMove = (event: React.PointerEvent) => {
     if (!panningRef.current) return;
-    const dx = e.clientX - drag.current.x;
-    const dy = e.clientY - drag.current.y;
-    setTx(drag.current.ox + dx);
-    setTy(drag.current.oy + dy);
+    const dx = event.clientX - dragRef.current.x;
+    const dy = event.clientY - dragRef.current.y;
+    setTx(dragRef.current.ox + dx);
+    setTy(dragRef.current.oy + dy);
   };
 
   const onPointerUp = () => {
     panningRef.current = false;
   };
 
-  const onDoubleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const next = scale < 2 ? 2.5 : 1;
-    setScale(next);
-    if (next === 1) {
-      setTx(0);
-      setTy(0);
-    }
-  };
-
-  // Close only if clicking on the real backdrop
-  const onBackdropDown = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) onClose();
+  const onBackdropMouseDown = (event: React.MouseEvent) => {
+    if (event.target === event.currentTarget) onClose();
   };
 
   return createPortal(
-    <div className={styles.modalOverlay} onMouseDown={onBackdropDown} role="dialog" aria-modal="true">
-      <div className={styles.modalPanel} onMouseDown={(e) => e.stopPropagation()}>
+    <div className={styles.modalOverlay} onMouseDown={onBackdropMouseDown} role="dialog" aria-modal="true">
+      <div className={styles.modalPanel} onMouseDown={(event) => event.stopPropagation()}>
         <div className={styles.modalHeader}>
           <div className={styles.modalTitle} title={title}>
             {title}
@@ -271,14 +292,14 @@ function ViewerModal({
           <div className={styles.modalActions}>
             <button
               className={styles.btnSm}
-              onClick={() => setScale((s) => Math.max(0.2, +(s - 0.25).toFixed(2)))}
+              onClick={() => setScale((current) => Math.max(0.2, +(current - 0.25).toFixed(2)))}
               title="Zoom out"
             >
               −
             </button>
             <button
               className={styles.btnSm}
-              onClick={() => setScale((s) => Math.min(8, +(s + 0.25).toFixed(2)))}
+              onClick={() => setScale((current) => Math.min(8, +(current + 0.25).toFixed(2)))}
               title="Zoom in"
             >
               +
@@ -297,7 +318,7 @@ function ViewerModal({
             <button className={styles.btnSm} onClick={onDownload} title="Download PNG">
               Download
             </button>
-            <button ref={closeBtnRef} className={styles.btnSm} onClick={onClose} title="Close (Esc)">
+            <button ref={closeBtnRef} className={styles.btnSm} onClick={onClose} title="Close">
               Close
             </button>
           </div>
@@ -311,16 +332,13 @@ function ViewerModal({
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
-          onDoubleClick={onDoubleClick}
         >
           <img
             src={imageUrl}
-            alt="overlay"
+            alt="prediction overlay"
             draggable={false}
             className={styles.modalImg}
-            style={{
-              transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(${scale})`,
-            }}
+            style={{ transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(${scale})` }}
           />
         </div>
       </div>
@@ -332,7 +350,6 @@ function ViewerModal({
 export default function ToothInSegPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [running, setRunning] = useState(false);
-
   const [dragActive, setDragActive] = useState(false);
 
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -342,46 +359,45 @@ export default function ToothInSegPage() {
 
   const imgInputRef = useRef<HTMLInputElement | null>(null);
   const folderInputRef = useRef<HTMLInputElement | null>(null);
-
-  // avoid stale revoke
   const itemsRef = useRef<Item[]>([]);
+
   useEffect(() => {
     itemsRef.current = items;
   }, [items]);
 
   useEffect(() => {
     return () => {
-      itemsRef.current.forEach((it) => URL.revokeObjectURL(it.previewUrl));
+      itemsRef.current.forEach((item) => URL.revokeObjectURL(item.previewUrl));
     };
   }, []);
 
   const total = items.length;
-  const doneCount = useMemo(() => items.filter((x) => x.status === "DONE").length, [items]);
-  const failCount = useMemo(() => items.filter((x) => x.status === "FAILED").length, [items]);
+  const doneCount = useMemo(() => items.filter((item) => item.status === "DONE").length, [items]);
+  const failCount = useMemo(() => items.filter((item) => item.status === "FAILED").length, [items]);
   const finishedCount = useMemo(
-    () => items.filter((x) => x.status === "DONE" || x.status === "FAILED").length,
+    () => items.filter((item) => item.status === "DONE" || item.status === "FAILED").length,
     [items]
   );
   const progressPct = total ? Math.round((finishedCount / total) * 100) : 0;
+  const hasCompletedItem = useMemo(() => items.some((item) => item.status === "DONE"), [items]);
 
   const addFiles = (files: File[]) => {
-    const next = files
-      .filter((f) => f.type.startsWith("image/"))
-      .map((f) => ({
-        key: keyOf(f),
-        file: f,
-        path: getRelPath(f),
-        previewUrl: URL.createObjectURL(f),
+    const nextItems = files
+      .filter((file) => file.type.startsWith("image/"))
+      .map((file) => ({
+        key: keyOf(file),
+        file,
+        path: getRelPath(file),
+        previewUrl: URL.createObjectURL(file),
         status: "IDLE" as Status,
       }));
 
     setItems((prev) => {
-      const map = new Map(prev.map((x) => [x.key, x]));
-
-      for (const n of next) {
-        const old = map.get(n.key);
-        if (old) URL.revokeObjectURL(old.previewUrl);
-        map.set(n.key, n);
+      const map = new Map(prev.map((item) => [item.key, item]));
+      for (const nextItem of nextItems) {
+        const previous = map.get(nextItem.key);
+        if (previous) URL.revokeObjectURL(previous.previewUrl);
+        map.set(nextItem.key, nextItem);
       }
       return Array.from(map.values());
     });
@@ -389,14 +405,14 @@ export default function ToothInSegPage() {
 
   const removeItem = (key: string) => {
     setItems((prev) => {
-      const found = prev.find((x) => x.key === key);
-      if (found) URL.revokeObjectURL(found.previewUrl);
-      return prev.filter((x) => x.key !== key);
+      const target = prev.find((item) => item.key === key);
+      if (target) URL.revokeObjectURL(target.previewUrl);
+      return prev.filter((item) => item.key !== key);
     });
   };
 
   const clearAll = () => {
-    items.forEach((it) => URL.revokeObjectURL(it.previewUrl));
+    items.forEach((item) => URL.revokeObjectURL(item.previewUrl));
     setItems([]);
   };
 
@@ -407,12 +423,13 @@ export default function ToothInSegPage() {
     setViewerOpen(true);
   };
 
-  const downloadPredictPng = async (it: Item) => {
-    const bytes = await getOverlayBytes(it.result);
+  const downloadPredictPng = async (item: Item) => {
+    const bytes = await getOverlayBytes(item.result);
     if (!bytes) return;
+
     await downloadBlob(
       new Blob([u8ToArrayBuffer(bytes)], { type: "image/png" }),
-      replaceExt(it.file.name, "_predict.png")
+      replaceExt(item.file.name, "_predict.png")
     );
   };
 
@@ -421,24 +438,34 @@ export default function ToothInSegPage() {
     setRunning(true);
 
     setItems((prev) =>
-      prev.map((x) =>
-        x.status === "DONE" ? x : { ...x, status: "QUEUED", error: undefined, result: undefined }
+      prev.map((item) =>
+        item.status === "DONE"
+          ? item
+          : { ...item, status: "QUEUED", error: undefined, result: undefined }
       )
     );
 
     const snapshot = itemsRef.current;
 
-    for (const it of snapshot) {
-      if (it.status === "DONE") continue;
+    for (const item of snapshot) {
+      if (item.status === "DONE") continue;
 
-      setItems((prev) => prev.map((x) => (x.key === it.key ? { ...x, status: "RUNNING" } : x)));
+      setItems((prev) =>
+        prev.map((current) => (current.key === item.key ? { ...current, status: "RUNNING" } : current))
+      );
+
       try {
-        const r = await api.predict(it.file, it.path);
-        setItems((prev) => prev.map((x) => (x.key === it.key ? { ...x, status: "DONE", result: r } : x)));
-      } catch (e: any) {
+        const result = await api.predict(item.file, item.path);
         setItems((prev) =>
-          prev.map((x) =>
-            x.key === it.key ? { ...x, status: "FAILED", error: e?.message ?? "Predict failed" } : x
+          prev.map((current) =>
+            current.key === item.key ? { ...current, status: "DONE", result } : current
+          )
+        );
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "Predict failed";
+        setItems((prev) =>
+          prev.map((current) =>
+            current.key === item.key ? { ...current, status: "FAILED", error: message } : current
           )
         );
       }
@@ -448,47 +475,36 @@ export default function ToothInSegPage() {
   };
 
   const downloadAllZip = async () => {
-    if (!items.some((x) => x.status === "DONE")) return;
+    if (!hasCompletedItem) return;
 
     const zip = new JSZip();
     const inputDir = zip.folder("input");
     const predictDir = zip.folder("predict");
     const jsonDir = zip.folder("json");
 
-    for (const it of items) {
-      const rel = safeZipRelPath(it.path);
+    for (const item of items) {
+      const rel = safeZipRelPath(item.path);
 
-      // input/<path>
       try {
-        const buf = await it.file.arrayBuffer();
-        inputDir?.file(rel, new Uint8Array(buf));
-      } catch {}
-
-      if (it.status !== "DONE" || !it.result) continue;
-
-      // predict/<path>.png
-      const predBytes = await getOverlayBytes(it.result);
-      if (predBytes) {
-        const outRel = replaceExt(rel, ".png");
-        predictDir?.file(outRel, u8ToArrayBuffer(predBytes));
+        const buffer = await item.file.arrayBuffer();
+        inputDir?.file(rel, new Uint8Array(buffer));
+      } catch {
+        // ignore file read failure for input copy
       }
 
-      // json/<path>.json
-      const payload = {
-        file: it.path,
-        id: (it.result as any)?.id,
-        createdAt: (it.result as any)?.createdAt,
-        inferenceMs: (it.result as any)?.inferenceMs ?? (it.result as any)?.inference_ms,
-        presentFdi: getPresentFdi(it.result) ?? [],
-        missingFdi: getMissingFdi(it.result) ?? [],
-        instances: (it.result as any)?.instances ?? [],
-      };
-      jsonDir?.file(replaceExt(rel, ".json"), JSON.stringify(payload, null, 2));
+      if (item.status !== "DONE" || !item.result) continue;
+
+      const overlayBytes = await getOverlayBytes(item.result);
+      if (overlayBytes) {
+        predictDir?.file(replaceExt(rel, ".png"), u8ToArrayBuffer(overlayBytes));
+      }
+
+      jsonDir?.file(replaceExt(rel, ".json"), JSON.stringify(buildJsonPayload(item), null, 2));
     }
 
     const blob = await zip.generateAsync({ type: "blob" });
-    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
+    const url = URL.createObjectURL(blob);
     a.href = url;
     a.download = `toothinseg_${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.zip`;
     document.body.appendChild(a);
@@ -497,12 +513,11 @@ export default function ToothInSegPage() {
     URL.revokeObjectURL(url);
   };
 
-  const onDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const onDrop = (event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
     setDragActive(false);
-    const files = Array.from(e.dataTransfer.files ?? []);
-    addFiles(files);
+    addFiles(Array.from(event.dataTransfer.files ?? []));
   };
 
   return (
@@ -513,7 +528,7 @@ export default function ToothInSegPage() {
             <div className={styles.kicker}>Instance Segmentation</div>
             <h1 className={styles.title}>Predict</h1>
             <p className={styles.subtitle}>
-              Select images/folder → Predict → Click the prediction to zoom → Download PNG/JSON or a combined ZIP
+              Upload dental X-ray images, run prediction, then view or download the result.
             </p>
           </div>
 
@@ -521,11 +536,9 @@ export default function ToothInSegPage() {
             <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={predictAll} disabled={!items.length || running}>
               {running ? "Predicting..." : "Predict"}
             </button>
-
-            <button className={styles.btn} onClick={downloadAllZip} disabled={!items.some((x) => x.status === "DONE")}>
+            <button className={styles.btn} onClick={downloadAllZip} disabled={!hasCompletedItem}>
               Download ZIP
             </button>
-
             <button className={`${styles.btn} ${styles.btnDanger}`} onClick={clearAll} disabled={!items.length || running}>
               Clear
             </button>
@@ -557,17 +570,15 @@ export default function ToothInSegPage() {
       </header>
 
       <section className={styles.toolbar}>
-        {/* hidden inputs */}
         <input
           ref={imgInputRef}
           className={styles.hiddenInput}
           type="file"
           multiple
           accept="image/*"
-          onChange={(e) => addFiles(Array.from(e.target.files ?? []))}
+          onChange={(event) => addFiles(Array.from(event.target.files ?? []))}
         />
 
-        {/* @ts-ignore */}
         <input
           ref={folderInputRef}
           className={styles.hiddenInput}
@@ -578,38 +589,38 @@ export default function ToothInSegPage() {
           webkitdirectory="true"
           // @ts-ignore
           directory="true"
-          onChange={(e) => addFiles(Array.from(e.target.files ?? []))}
+          onChange={(event) => addFiles(Array.from(event.target.files ?? []))}
         />
 
         <div
           className={`${styles.dropzone} ${dragActive ? styles.dropzoneActive : ""}`}
-          onDragEnter={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
+          onDragEnter={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
             setDragActive(true);
           }}
-          onDragOver={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
+          onDragOver={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
             setDragActive(true);
           }}
-          onDragLeave={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
+          onDragLeave={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
             setDragActive(false);
           }}
           onDrop={onDrop}
-          onClick={(e) => {
-            const el = e.target as HTMLElement;
-            if (el.closest("button")) return;
+          onClick={(event) => {
+            const target = event.target as HTMLElement;
+            if (target.closest("button")) return;
             imgInputRef.current?.click();
           }}
         >
           <div className={styles.dropLeft}>
             <div className={styles.dropIcon}>🦷</div>
             <div>
-              <div className={styles.dropTitle}>Drop images here, or click to browse</div>
-              <div className={styles.dropHint}>Supports JPG/PNG • Multi-select • Folder upload supported</div>
+              <div className={styles.dropTitle}>Drop images here or click to browse</div>
+              <div className={styles.dropHint}>JPG, PNG • multiple files • folder upload supported</div>
             </div>
           </div>
 
@@ -625,10 +636,7 @@ export default function ToothInSegPage() {
 
         <div className={styles.toolbarFoot}>
           <div className={styles.miniHelp}>
-            * ZIP includes: <b>input/</b>, <b>predict/</b>, <b>json/</b>
-          </div>
-          <div className={styles.miniHelp}>
-            Progress: <b>{finishedCount}</b> / {total}
+            Progress <b>{finishedCount}</b> / {total}
           </div>
         </div>
       </section>
@@ -636,73 +644,75 @@ export default function ToothInSegPage() {
       {!items.length && (
         <div className={styles.empty}>
           <div className={styles.emptyCard}>
-            <div className={styles.emptyTitle}>No images yet</div>
-            <div className={styles.emptyDesc}>
-              Click <b>Select images</b> / <b>Select folder</b> or drag & drop above.
-            </div>
+            <div className={styles.emptyTitle}>No images selected</div>
+            <div className={styles.emptyDesc}>Choose images or a folder to start prediction.</div>
           </div>
         </div>
       )}
 
       <div className={styles.list}>
-        {items.map((it) => {
-          const overlaySrc = getOverlaySrc(it.result);
-          const canView = it.status === "DONE" && !!overlaySrc;
-          const missing = it.status === "DONE" ? getMissingFdi(it.result) : null;
-          const present = it.status === "DONE" ? getPresentFdi(it.result) : null;
-          const missingSorted = missing ? sortFdi(missing) : [];
+        {items.map((item) => {
+          const overlaySrc = getOverlaySrc(item.result);
+          const missingSorted = sortFdi(getMissingFdi(item.result));
+          const present = getPresentFdi(item.result);
+          const canView = item.status === "DONE" && Boolean(overlaySrc);
+          const inferenceMs = getInferenceMs(item.result);
 
           return (
-            <article key={it.key} className={styles.card}>
+            <article key={item.key} className={styles.card}>
               <div className={styles.cardHead}>
                 <div className={styles.cardTitleWrap}>
-                  <div className={styles.cardTitle} title={it.path}>
-                    {it.path}
+                  <div className={styles.cardTitle} title={item.path}>
+                    {item.file.name}
                   </div>
                   <div className={styles.cardMeta}>
-                    {it.file.name} • {niceSize(it.file.size)}
+                    {item.path !== item.file.name ? `${item.path} • ` : ""}
+                    {niceSize(item.file.size)}
+                    {typeof inferenceMs === "number" ? ` • ${Math.round(inferenceMs)} ms` : ""}
                   </div>
                 </div>
 
                 <div className={styles.cardRight}>
-                  <span className={`${styles.badge} ${statusClass(it.status)}`}>{it.status}</span>
-                  <button className={styles.iconBtn} onClick={() => removeItem(it.key)} disabled={running} title="Remove">
+                  <span className={`${styles.badge} ${statusClass(item.status)}`}>{statusLabel(item.status)}</span>
+                  <button className={styles.iconBtn} onClick={() => removeItem(item.key)} disabled={running} title="Remove">
                     ✕
                   </button>
                 </div>
               </div>
 
-              {it.status === "FAILED" && <div className={styles.errorBox}>❌ {it.error}</div>}
+              {item.status === "FAILED" && <div className={styles.errorBox}>❌ {item.error}</div>}
 
               <div className={styles.previewGrid}>
                 <div className={styles.previewCol}>
-                  <div className={styles.previewLabel}>Input</div>
+                  <div className={styles.previewLabel}>Original</div>
                   <div className={styles.imgWrap}>
-                    <img src={it.previewUrl} className={styles.img} alt="input" />
+                    <img src={item.previewUrl} className={styles.img} alt="input" />
                   </div>
                 </div>
 
                 <div className={styles.previewCol}>
                   <div className={styles.previewLabel}>Prediction</div>
 
-                  {(it.status === "QUEUED" || it.status === "RUNNING") && (
-                    <div className={styles.loadingText}>{it.status === "QUEUED" ? "Queued..." : "Running..."}</div>
+                  {(item.status === "QUEUED" || item.status === "RUNNING") && (
+                    <div className={styles.loadingText}>
+                      {item.status === "QUEUED" ? "Queued..." : "Running prediction..."}
+                    </div>
                   )}
 
-                  {it.status === "DONE" && overlaySrc && (
+                  {item.status === "DONE" && overlaySrc && (
                     <>
                       <div className={styles.imgWrap}>
                         <img
                           src={overlaySrc}
                           className={`${styles.img} ${styles.imgZoom}`}
                           alt="prediction"
-                          onClick={() => openViewer(it.path, overlaySrc, () => downloadPredictPng(it))}
+                          onClick={() => openViewer(item.path, overlaySrc, () => downloadPredictPng(item))}
                         />
                       </div>
 
                       <div className={styles.teethSummary}>
                         <div className={styles.teethRow}>
-                          <div className={styles.teethKey}>Missing</div>
+                          <div className={styles.teethKey}>Missing teeth</div>
                           <div className={styles.teethVal}>
                             {missingSorted.length ? (
                               <div className={styles.pillRow}>
@@ -719,9 +729,9 @@ export default function ToothInSegPage() {
                         </div>
 
                         <div className={styles.teethRow}>
-                          <div className={styles.teethKey}>Present</div>
+                          <div className={styles.teethKey}>Detected teeth</div>
                           <div className={styles.teethVal}>
-                            <span className={styles.countText}>{present?.length ?? 0} teeth</span>
+                            <span className={styles.countText}>{present.length} teeth</span>
                           </div>
                         </div>
                       </div>
@@ -730,40 +740,27 @@ export default function ToothInSegPage() {
                         <button
                           className={`${styles.btn} ${styles.btnPrimary}`}
                           disabled={!canView}
-                          onClick={() => openViewer(it.path, overlaySrc, () => downloadPredictPng(it))}
+                          onClick={() => openViewer(item.path, overlaySrc, () => downloadPredictPng(item))}
                         >
-                          View / Zoom
+                          View
                         </button>
-
-                        <button className={styles.btn} disabled={!canView} onClick={() => downloadPredictPng(it)}>
-                          Download PNG
+                        <button className={styles.btn} disabled={!canView} onClick={() => downloadPredictPng(item)}>
+                          PNG
                         </button>
-
                         <button
                           className={styles.btn}
-                          disabled={it.status !== "DONE" || !it.result}
-                          onClick={() => {
-                            const payload = {
-                              file: it.path,
-                              id: (it.result as any)?.id,
-                              createdAt: (it.result as any)?.createdAt,
-                              inferenceMs: (it.result as any)?.inferenceMs ?? (it.result as any)?.inference_ms,
-                              presentFdi: getPresentFdi(it.result) ?? [],
-                              missingFdi: getMissingFdi(it.result) ?? [],
-                              instances: (it.result as any)?.instances ?? [],
-                            };
-                            downloadText(JSON.stringify(payload, null, 2), replaceExt(it.file.name, ".json"));
-                          }}
+                          disabled={item.status !== "DONE" || !item.result}
+                          onClick={() => downloadText(JSON.stringify(buildJsonPayload(item), null, 2), replaceExt(item.file.name, ".json"))}
                         >
-                          Download JSON
+                          JSON
                         </button>
                       </div>
                     </>
                   )}
 
-                  {it.status === "DONE" && !overlaySrc && (
+                  {item.status === "DONE" && !overlaySrc && (
                     <div className={styles.warnBox}>
-                      ⚠️ Completed, but no overlay found in the response (overlayPngBase64/overlayUrl).
+                      ⚠️ Prediction finished, but no overlay image was returned.
                     </div>
                   )}
                 </div>
