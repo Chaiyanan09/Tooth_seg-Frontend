@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import Swal from "sweetalert2";
 import styles from "../history.module.css";
 
 import { api, type PredictResponse } from "@/lib/api";
@@ -128,10 +129,8 @@ function dayKeyFromISO(iso: string): string {
 }
 
 function formatDay(dayKey: string): string {
-  // dayKey expected: YYYY-MM-DD
   if (!dayKey || !/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(dayKey)) return dayKey || "-";
 
-  // Build a stable timestamp (avoid "Invalid time value")
   const d = new Date(`${dayKey}T00:00:00.000+07:00`);
   if (Number.isNaN(d.getTime())) return dayKey;
 
@@ -153,7 +152,7 @@ function formatTime(iso: string): string {
     minute: "2-digit",
   }).format(d);
 }
-/** ===== Modal zoom/pan viewer (portal) ===== */
+
 function ViewerModal({
   open,
   onClose,
@@ -331,16 +330,15 @@ function ViewerModal({
 export default function HistoryDayPage() {
   const params = useParams() as Record<string, string | string[]>;
   const raw = params?.day;
-  const dayKey = decodeURIComponent(Array.isArray(raw) ? raw[0] : (raw ?? ""));
+  const dayKey = decodeURIComponent(Array.isArray(raw) ? raw[0] : raw ?? "");
   const dayLabel = formatDay(dayKey);
 
-const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [items, setItems] = useState<HistoryItem[]>([]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // cache for fresh signed urls / raw json
   const [detailMap, setDetailMap] = useState<Record<string, PredictResponse>>({});
   const requestedRef = useRef<Set<string>>(new Set());
 
@@ -394,36 +392,79 @@ const [loading, setLoading] = useState(true);
 
   async function deleteHistoryItem(it: HistoryItem) {
     const id = getId(it);
-    if (!id) return;
+    if (!id || deletingId) return;
 
-    const ok = window.confirm(`Delete history "${it.path || id}" ?`);
-    if (!ok) return;
+    const label = it.path || id;
+
+    const result = await Swal.fire({
+      title: "Delete this prediction?",
+      html: `This will permanently delete <b>${label}</b>.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#d33",
+      reverseButtons: true,
+      focusCancel: true,
+    });
+
+    if (!result.isConfirmed) return;
+
+    const prevItems = items;
+    const prevDetailMap = detailMap;
+
+    setDeletingId(id);
+
+    // Optimistic UI: remove immediately
+    setItems((prev) => prev.filter((x) => getId(x) !== id));
+    setDetailMap((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+
+    if (viewerOpen) {
+      setViewerOpen(false);
+    }
+
+    void Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon: "info",
+      title: "Deleting...",
+      showConfirmButton: false,
+      timer: 1200,
+      timerProgressBar: true,
+    });
 
     try {
-      setDeletingId(id);
       await api.historyDelete(id);
 
-      setItems((prev) => prev.filter((x) => getId(x) !== id));
-
-      setDetailMap((prev) => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
+      void Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Prediction deleted",
+        showConfirmButton: false,
+        timer: 1400,
+        timerProgressBar: true,
       });
-
-      if (viewerOpen) {
-        setViewerOpen(false);
-      }
     } catch (e: any) {
-      alert(e?.message ?? "Failed to delete history");
+      // rollback if delete failed
+      setItems(prevItems);
+      setDetailMap(prevDetailMap);
+
+      await Swal.fire({
+        icon: "error",
+        title: "Delete failed",
+        text: e?.message ?? "Failed to delete history.",
+        confirmButtonText: "OK",
+      });
     } finally {
       setDeletingId(null);
     }
   }
 
-
-  // Prefetch signed preview URLs (Method A): if history list doesn't contain overlayUrl,
-  // we fetch /api/history/{id} for those items in background and cache it in detailMap.
   useEffect(() => {
     let cancelled = false;
 
@@ -451,7 +492,6 @@ const [loading, setLoading] = useState(true);
           if (cancelled) return;
           setDetailMap((prev) => ({ ...prev, [id]: d }));
         } catch {
-          // ignore
         }
       }
     }
@@ -469,7 +509,6 @@ const [loading, setLoading] = useState(true);
   const openViewer = async (it: HistoryItem) => {
     const id = getId(it);
 
-    // try refresh signed url for best UX (cloudinary signed URL may expire)
     const d = id ? await ensureDetail(id, true) : null;
     const overlaySrc = getOverlaySrc(d) || getOverlaySrc(it);
 
@@ -503,13 +542,11 @@ const [loading, setLoading] = useState(true);
     const id = getId(it);
     const d = id ? await ensureDetail(id) : null;
 
-    // Prefer real ML raw json if available
     const raw = (d as any)?.mlRawJson || (it as any)?.mlRawJson;
     if (typeof raw === "string" && raw.trim().length) {
       return downloadText(raw, replaceExt(it.path || id || "predict", ".json"));
     }
 
-    // fallback: compact JSON
     const payload = {
       id,
       createdAt: it.createdAt,
@@ -530,7 +567,9 @@ const [loading, setLoading] = useState(true);
           <div>
             <div className={styles.kicker}>History • Day</div>
             <h1 className={styles.title}>{dayLabel}</h1>
-            <p className={styles.subtitle}>All predictions made on this date (for the logged-in user) — timezone: {TZ}</p>
+            <p className={styles.subtitle}>
+              All predictions made on this date (for the logged-in user) — timezone: {TZ}
+            </p>
 
             <div className={styles.breadcrumb}>
               <Link href="/history">History</Link>
@@ -597,7 +636,6 @@ const [loading, setLoading] = useState(true);
           {items.map((it, idx) => {
             const id = getId(it) || String(idx);
 
-            // Use cached (fresh) url if available
             const merged = detailMap[id] ? ({ ...it, ...detailMap[id] } as any) : it;
             const overlaySrc = getOverlaySrc(merged);
 
@@ -681,7 +719,11 @@ const [loading, setLoading] = useState(true);
                 </div>
 
                 <div className={styles.actionRow}>
-                  <button className={`${styles.btn} ${styles.btnPrimary}`} disabled={!overlaySrc} onClick={() => openViewer(it)}>
+                  <button
+                    className={`${styles.btn} ${styles.btnPrimary}`}
+                    disabled={!overlaySrc}
+                    onClick={() => openViewer(it)}
+                  >
                     View / Zoom
                   </button>
 
@@ -695,7 +737,7 @@ const [loading, setLoading] = useState(true);
 
                   <button
                     className={styles.btn}
-                    disabled={deletingId === id}
+                    disabled={!!deletingId}
                     onClick={() => deleteHistoryItem(it)}
                     style={{
                       border: "1px solid rgba(255, 90, 90, 0.35)",
